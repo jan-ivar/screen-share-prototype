@@ -367,10 +367,10 @@
 <!-- ── Flow bar ── -->
 <div id="flow-bar">
   <label>Flow:</label>
-  <button class="flow-btn active" onclick="setFlow(1)">Option 1 — Chrome Picker</button>
-  <button class="flow-btn" onclick="setFlow(2)">Option 2 — Tab or Window/Screen</button>
-  <button class="flow-btn" onclick="setFlow(3)">Option 3 — Tab-first</button>
-  <button class="flow-btn" onclick="setFlow(4)">Option 4 — Tab-first + window/screen buttons</button>
+  <button class="flow-btn active" onclick="setFlow(1)">Windows: Chrome-style Picker</button>
+  <button class="flow-btn" onclick="setFlow(2)">Option 1: Upfront Tab and Window/Screen fork</button>
+  <button class="flow-btn" onclick="setFlow(3)">Option 2: Upfront 3-way fork</button>
+  <button class="flow-btn" onclick="setFlow(4)">Option 3: Tab-centric</button>
   <span class="flow-hint">Click the present button ↓ to start</span>
 </div>
 
@@ -509,8 +509,38 @@
   </div>
 
   <!-- ══════════════════════════════════════
+       OPTION 2 — Upfront 3-way fork
+  ══════════════════════════════════════ -->
+  <div class="overlay hidden" id="ov-3cards" onclick="if(event.target===this)closeAll()">
+    <div class="choice-dialog" style="width:540px" onclick="event.stopPropagation()">
+      <h2>What would you like to share?</h2>
+      <p class="choice-sub">Choose how you'd like to present in this meeting</p>
+      <div class="choice-cards">
+        <div class="choice-card" onclick="opt2Tab()">
+          <span class="choice-icon">🗂️</span>
+          <div class="choice-title">A Tab</div>
+          <div class="choice-desc">Share a specific browser tab with audio</div>
+        </div>
+        <div class="choice-card" onclick="showSCPicker('window')">
+          <span class="choice-icon">🪟</span>
+          <div class="choice-title">A Window</div>
+          <div class="choice-desc">Share any open window on your desktop</div>
+        </div>
+        <div class="choice-card" onclick="showSCPicker('screen')">
+          <span class="choice-icon">🖥️</span>
+          <div class="choice-title">Entire Screen</div>
+          <div class="choice-desc">Share everything on your display</div>
+        </div>
+      </div>
+      <div class="choice-footer">
+        <button class="btn-cancel" onclick="closeAll()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
        Shared — Tab-only picker
-       (Option 2 tab path + Option 3)
+       (Option 1 tab path)
   ══════════════════════════════════════ -->
   <div class="overlay hidden" id="ov-tabs" onclick="if(event.target===this)closeAll()">
     <div class="chrome-picker" onclick="event.stopPropagation()">
@@ -694,7 +724,7 @@
     } else if (currentFlow === 2) {
       document.getElementById('ov-2').classList.remove('hidden');
     } else if (currentFlow === 3) {
-      openTabPicker(true);
+      document.getElementById('ov-3cards').classList.remove('hidden');
     } else {
       openOpt4Picker();
     }
