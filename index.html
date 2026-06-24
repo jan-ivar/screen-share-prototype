@@ -368,9 +368,9 @@
 <div id="flow-bar">
   <label>Flow:</label>
   <button class="flow-btn active" onclick="setFlow(1)">Windows: Chrome-style Picker</button>
-  <button class="flow-btn" onclick="setFlow(2)">Option 1: Upfront Tab and Window/Screen fork</button>
-  <button class="flow-btn" onclick="setFlow(3)">Option 2: Upfront 3-way fork</button>
-  <button class="flow-btn" onclick="setFlow(4)">Option 3: Tab-centric</button>
+  <button class="flow-btn" onclick="setFlow(2)">Mac: Option 1 — Upfront Tab and Window/Screen fork</button>
+  <button class="flow-btn" onclick="setFlow(3)">Mac: Option 2 — Upfront 3-way fork</button>
+  <button class="flow-btn" onclick="setFlow(4)">Mac: Option 3 — Tab-centric</button>
   <span class="flow-hint">Click the present button ↓ to start</span>
 </div>
 
@@ -545,12 +545,8 @@
   <div class="overlay hidden" id="ov-tabs" onclick="if(event.target===this)closeAll()">
     <div class="chrome-picker" onclick="event.stopPropagation()">
       <div class="cp-head">
-        <h2>Choose what to share with meet.google.com</h2>
+        <h2>Choose which Firefox Tab to share with meet.google.com</h2>
         <p>The site will be able to see the contents of your screen</p>
-      </div>
-      <div class="cp-tabs">
-        <div class="cp-tab active">Firefox Tab</div>
-        <div class="cp-tab" id="escape-tab" style="display:none" onclick="showSCPicker()">Window or Screen</div>
       </div>
       <div class="cp-body-tabs" id="tab-body">
         <div class="tab-list" id="tab-list"></div>
@@ -571,16 +567,13 @@
   </div>
 
   <!-- ══════════════════════════════════════
-       OPTION 4 — Tab-first + window/screen buttons
+       MAC OPTION 3 — Tab-centric
   ══════════════════════════════════════ -->
   <div class="overlay hidden" id="ov-4" onclick="if(event.target===this)closeAll()">
     <div class="chrome-picker" onclick="event.stopPropagation()">
       <div class="cp-head">
-        <h2>Choose what to share with meet.google.com</h2>
+        <h2>Choose which Firefox Tab to share with meet.google.com</h2>
         <p>The site will be able to see the contents of your screen</p>
-      </div>
-      <div class="cp-tabs">
-        <div class="cp-tab active">Firefox Tab</div>
       </div>
       <div class="cp-body-tabs">
         <div class="tab-list" id="tab-list-4"></div>
@@ -773,9 +766,8 @@
     return `<div class="cp-body-tabs"><div class="tab-list" id="${listId}"></div><div class="tab-preview"><div class="tab-preview-img" id="${imgId}"></div><div class="tab-preview-title" id="${titleId}"></div></div></div>`;
   }
 
-  function openTabPicker(showEscape) {
+  function openTabPicker() {
     renderTabPickerIntoElement('tab-list','tab-preview-img','tab-preview-title');
-    document.getElementById('escape-tab').style.display = showEscape ? 'block' : 'none';
     document.getElementById('ov-tabs').classList.remove('hidden');
   }
 
@@ -871,7 +863,7 @@
   }
 
   /* ── Option 2 branches ── */
-  function opt2Tab()    { closeAll(); openTabPicker(false); }
+  function opt2Tab()    { closeAll(); openTabPicker(); }
   function opt2Window() { closeAll(); showSCPicker(); }
 
   /* ── SC picker ── */
