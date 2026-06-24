@@ -339,6 +339,8 @@
     display: flex; align-items: center; gap: 6px; white-space: nowrap; transition: background .15s;
   }
   .sc-share-btn:hover { background: rgba(86,86,136,.78); }
+  #sc-picker[data-mode="screen"] .sc-stage { display: none; }
+  #sc-picker[data-mode="window"] .sc-btn-primary { display: none; }
 
   /* ── Option 4 — alt share buttons ── */
   .cp-alt-row { padding: 6px 14px 10px; }
@@ -564,11 +566,11 @@
       <div class="cp-alt-row">
         <div class="cp-alt-divider"><span>or</span></div>
         <div class="cp-alt-btns">
-          <button class="cp-alt-btn" onclick="showSCPicker()">
+          <button class="cp-alt-btn" onclick="showSCPicker('window')">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
             Share a window
           </button>
-          <button class="cp-alt-btn" onclick="closeAll();onShareScreen('screen')">
+          <button class="cp-alt-btn" onclick="showSCPicker('screen')">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><rect x="5" y="6" width="14" height="8" rx="1" fill="currentColor" stroke="none" opacity=".25"/></svg>
             Share entire screen
           </button>
@@ -843,7 +845,14 @@
   function opt2Window() { closeAll(); showSCPicker(); }
 
   /* ── SC picker ── */
-  function showSCPicker() { closeAll(); document.getElementById('sc-picker').classList.remove('hidden'); }
+  function showSCPicker(mode) {
+    closeAll();
+    const el = document.getElementById('sc-picker');
+    el.dataset.mode = mode || '';
+    const titles = { screen: 'Share Entire Screen', window: 'Share a Window' };
+    el.querySelector('.sc-bar-title').textContent = titles[mode] || 'Share a Window or Entire Screen';
+    el.classList.remove('hidden');
+  }
 
   function onShareScreen(type, label) {
     closeAll();
