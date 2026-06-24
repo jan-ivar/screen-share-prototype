@@ -339,6 +339,25 @@
     display: flex; align-items: center; gap: 6px; white-space: nowrap; transition: background .15s;
   }
   .sc-share-btn:hover { background: rgba(86,86,136,.78); }
+
+  /* ── Option 4 — alt share buttons ── */
+  .cp-alt-row { padding: 6px 14px 10px; }
+  .cp-alt-divider {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 8px; font-size: 11.5px; color: #9aa0a6;
+  }
+  .cp-alt-divider::before, .cp-alt-divider::after {
+    content: ''; flex: 1; height: 1px; background: #e8eaed;
+  }
+  .cp-alt-btns { display: flex; gap: 8px; }
+  .cp-alt-btn {
+    flex: 1; padding: 9px 12px; border-radius: 8px;
+    border: 1.5px solid #dadce0; background: #fff;
+    color: #202124; font-size: 12.5px; cursor: pointer;
+    font-family: inherit; display: flex; align-items: center;
+    justify-content: center; gap: 6px; transition: all .15s; white-space: nowrap;
+  }
+  .cp-alt-btn:hover { border-color: #1a73e8; background: #f6f9ff; color: #1a73e8; }
 </style>
 </head>
 <body>
@@ -349,6 +368,7 @@
   <button class="flow-btn active" onclick="setFlow(1)">Option 1 — Chrome Picker</button>
   <button class="flow-btn" onclick="setFlow(2)">Option 2 — Tab or Window/Screen</button>
   <button class="flow-btn" onclick="setFlow(3)">Option 3 — Tab-first</button>
+  <button class="flow-btn" onclick="setFlow(4)">Option 4 — Tab-first + window/screen buttons</button>
   <span class="flow-hint">Click the present button ↓ to start</span>
 </div>
 
@@ -519,6 +539,49 @@
   </div>
 
   <!-- ══════════════════════════════════════
+       OPTION 4 — Tab-first + window/screen buttons
+  ══════════════════════════════════════ -->
+  <div class="overlay hidden" id="ov-4" onclick="if(event.target===this)closeAll()">
+    <div class="chrome-picker" onclick="event.stopPropagation()">
+      <div class="cp-head">
+        <h2>Choose what to share with meet.google.com</h2>
+        <p>The site will be able to see the contents of your screen</p>
+      </div>
+      <div class="cp-tabs">
+        <div class="cp-tab active">Firefox Tab</div>
+      </div>
+      <div class="cp-body-tabs">
+        <div class="tab-list" id="tab-list-4"></div>
+        <div class="tab-preview">
+          <div class="tab-preview-img" id="tab-preview-img-4"></div>
+          <div class="tab-preview-title" id="tab-preview-title-4"></div>
+        </div>
+      </div>
+      <div class="cp-bottom">
+        <input type="checkbox" class="cp-checkbox" id="mute-4">
+        <label for="mute-4" style="cursor:pointer">Mute website notifications while sharing</label>
+      </div>
+      <div class="cp-alt-row">
+        <div class="cp-alt-divider"><span>or</span></div>
+        <div class="cp-alt-btns">
+          <button class="cp-alt-btn" onclick="showSCPicker()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            Share a window
+          </button>
+          <button class="cp-alt-btn" onclick="closeAll();onShareScreen('screen')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><rect x="5" y="6" width="14" height="8" rx="1" fill="currentColor" stroke="none" opacity=".25"/></svg>
+            Share entire screen
+          </button>
+        </div>
+      </div>
+      <div class="cp-foot">
+        <button class="btn-cancel" onclick="closeAll()">Cancel</button>
+        <button class="btn-share" id="shr-4" onclick="onShareTab()">Share</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
        macOS SCContentSharingPicker
   ══════════════════════════════════════ -->
   <div id="sc-picker" class="hidden">
@@ -628,8 +691,10 @@
       openFullPicker();
     } else if (currentFlow === 2) {
       document.getElementById('ov-2').classList.remove('hidden');
-    } else {
+    } else if (currentFlow === 3) {
       openTabPicker(true);
+    } else {
+      openOpt4Picker();
     }
   }
 
@@ -682,6 +747,11 @@
     document.getElementById('ov-tabs').classList.remove('hidden');
   }
 
+  function openOpt4Picker() {
+    renderTabPickerIntoElement('tab-list-4', 'tab-preview-img-4', 'tab-preview-title-4');
+    document.getElementById('ov-4').classList.remove('hidden');
+  }
+
   function renderTabPickerIntoElement(listId, imgId, titleId) {
     const list = document.getElementById(listId);
     if (!list) return;
@@ -703,7 +773,7 @@
     document.querySelectorAll(`#${listId} .tab-list-item`).forEach(el => el.classList.toggle('selected', el.dataset.tid === id));
     updatePreview(id, imgId, titleId);
     // also enable share if it was disabled
-    const shr = document.getElementById('shr-tabs') || document.getElementById('shr-1');
+    const shr = document.getElementById('shr-tabs') || document.getElementById('shr-4') || document.getElementById('shr-1');
     if (shr) shr.disabled = false;
   }
 
