@@ -391,12 +391,27 @@
   }
   .sc-htab-share:hover { background: rgba(75,75,130,.95); }
   .sc-htab:hover .sc-htab-share { display: block; }
+  /* invisible bridge fills the gap so hover stays active as mouse moves to button */
+  .sc-htab-share::before {
+    content: ''; position: absolute; bottom: 100%;
+    left: -6px; right: -6px; height: 8px;
+  }
+
+  .sc-win-horiz { display: flex; flex-direction: column; height: calc(100% - 26px); overflow: hidden; }
 
   .sc-vert-body { display: flex; height: calc(100% - 26px); overflow: hidden; }
   .sc-vert-sidebar {
     width: 188px; background: #f3f3f5; border-right: 1px solid #d0d3d9;
     padding: 6px 4px; display: flex; flex-direction: column; gap: 1px;
     flex-shrink: 0; overflow: hidden;
+  }
+  .sc-vert-sidebar--collapsed {
+    width: 42px; padding: 6px 2px; align-items: center; overflow: visible;
+  }
+  .sc-vert-sidebar--collapsed .sc-vtab { padding: 5px 3px; justify-content: center; overflow: visible; }
+  .sc-vert-sidebar--collapsed .sc-vtab-label { display: none; }
+  .sc-vert-sidebar--collapsed .sc-vtab-share {
+    left: calc(100% + 5px); right: auto; top: 50%; transform: translateY(-50%);
   }
   .sc-vtab {
     position: relative; display: flex; align-items: center; gap: 7px;
@@ -711,32 +726,93 @@
       <div style="opacity:.8;display:flex;align-items:center">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 9h20"/><path d="M7 9V4"/></svg>
       </div>
-      <span class="sc-bar-title" style="margin-left:8px">Share a Firefox Tab</span>
+      <span class="sc-bar-title" style="margin-left:8px">Share a Tab, Window, or Screen</span>
       <button class="sc-btn sc-btn-cancel" onclick="closeAll()">Cancel</button>
+      <button class="sc-btn sc-btn-primary" onclick="onShareScreen('screen')">Share Entire Screen</button>
     </div>
     <div class="sc-stage">
 
-      <!-- Firefox: Horizontal tabs -->
-      <div class="sc-win" style="left:3%;top:6%;width:54%;height:72%">
+      <!-- Firefox: Normal horizontal tabs (5 tabs) -->
+      <div class="sc-win" style="left:2%;top:4%;width:46%;height:50%">
         <div class="sc-titlebar">
           <div class="sc-dot r"></div><div class="sc-dot y"></div><div class="sc-dot g"></div>
           <span class="sc-win-title">Firefox — Horizontal tabs</span>
         </div>
-        <div style="display:flex;flex-direction:column;height:calc(100% - 26px);overflow:hidden">
+        <div class="sc-win-horiz">
           <div class="sc-horiz-tabbar" id="horiz-tabbar"></div>
-          <div class="sc-page-stub" style="background:#0f0f10;color:rgba(255,255,255,.2)">⚡ bolt.new</div>
+          <div class="sc-page-stub" style="background:#0f0f10;color:rgba(255,255,255,.18);flex-direction:column;gap:10px">
+            <span>⚡ bolt.new</span>
+            <button class="sc-share-btn" onclick="onShareScreen('window','Firefox')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+              Share This Window
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Firefox: Vertical tabs (sidebar) -->
-      <div class="sc-win" style="right:3%;top:11%;width:37%;height:64%">
+      <!-- Firefox: 20 squished horizontal tabs -->
+      <div class="sc-win" style="left:2%;top:57%;width:46%;height:30%">
+        <div class="sc-titlebar">
+          <div class="sc-dot r"></div><div class="sc-dot y"></div><div class="sc-dot g"></div>
+          <span class="sc-win-title">Firefox — Horizontal tabs (20 tabs open)</span>
+        </div>
+        <div class="sc-win-horiz">
+          <div class="sc-horiz-tabbar" id="horiz-tabbar-20"></div>
+          <div class="sc-page-stub" style="background:#1a1a2e;color:rgba(255,255,255,.18)">
+            <button class="sc-share-btn" onclick="onShareScreen('window','Firefox (20 tabs)')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+              Share This Window
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Firefox: Normal vertical tabs -->
+      <div class="sc-win" style="right:2%;top:4%;width:38%;height:50%">
         <div class="sc-titlebar">
           <div class="sc-dot r"></div><div class="sc-dot y"></div><div class="sc-dot g"></div>
           <span class="sc-win-title">Firefox — Vertical tabs (sidebar)</span>
         </div>
         <div class="sc-vert-body">
           <div class="sc-vert-sidebar" id="vert-tabbar"></div>
-          <div class="sc-page-stub" style="background:#202124;color:rgba(255,255,255,.2)">📹 meet.google.com</div>
+          <div class="sc-page-stub" style="background:#202124;color:rgba(255,255,255,.18);flex-direction:column;gap:10px">
+            <span>📹 meet.google.com</span>
+            <button class="sc-share-btn" onclick="onShareScreen('window','Firefox (vertical tabs)')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+              Share This Window
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Firefox: Collapsed vertical sidebar (icon-only) -->
+      <div class="sc-win" style="right:42%;top:57%;width:13%;height:30%">
+        <div class="sc-titlebar">
+          <div class="sc-dot r"></div><div class="sc-dot y"></div><div class="sc-dot g"></div>
+          <span class="sc-win-title">Firefox — Collapsed sidebar</span>
+        </div>
+        <div class="sc-vert-body">
+          <div class="sc-vert-sidebar sc-vert-sidebar--collapsed" id="vert-tabbar-collapsed"></div>
+          <div class="sc-page-stub" style="background:#202124;color:rgba(255,255,255,.18)">📹</div>
+        </div>
+      </div>
+
+      <!-- Terminal -->
+      <div class="sc-win" style="right:2%;top:57%;width:26%;height:30%">
+        <div class="sc-titlebar" style="background:rgba(38,38,40,.96)">
+          <div class="sc-dot r"></div><div class="sc-dot y"></div><div class="sc-dot g"></div>
+          <span class="sc-win-title">agevisser — zsh — 120×50</span>
+        </div>
+        <div class="sc-win-body" style="background:#2a2a2c;align-items:flex-start;justify-content:flex-start;padding:10px 12px">
+          <div style="font-family:'SF Mono',monospace;font-size:10px;color:#a8d880;line-height:1.65;width:100%">
+            <div>agevisser@agevisser ~ % <span style="animation:blink 1s step-end infinite;opacity:.6">█</span></div>
+          </div>
+          <div style="flex:1;display:flex;align-items:flex-end;width:100%;justify-content:center;padding-bottom:8px">
+            <button class="sc-share-btn" onclick="onShareScreen('window','Terminal')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+              Share This Window
+            </button>
+          </div>
         </div>
       </div>
 
@@ -816,6 +892,19 @@
   ];
 
   const SCR_DATA = [{ label:'Built-in Retina Display', bg:'#1a2535', emoji:'🖥', icon:'🖥' }];
+
+  const TABS_MANY = [
+    {fav:'📹',title:'Google Meet'}, {fav:'⚡',title:'bolt.new'},
+    {fav:'▶',title:'YouTube'}, {fav:'G',title:'Google'},
+    {fav:'⚙',title:'ChatGPT'}, {fav:'📘',title:'Facebook'},
+    {fav:'🐦',title:'X / Twitter'}, {fav:'💼',title:'LinkedIn'},
+    {fav:'📰',title:'NY Times'}, {fav:'🔴',title:'Reddit'},
+    {fav:'📧',title:'Gmail'}, {fav:'📅',title:'Calendar'},
+    {fav:'📊',title:'Notion'}, {fav:'🎵',title:'Spotify'},
+    {fav:'💬',title:'Slack'}, {fav:'🔵',title:'Zoom'},
+    {fav:'🟠',title:'New Tab'}, {fav:'⬛',title:'VS Code'},
+    {fav:'🟣',title:'Figma'}, {fav:'☁️',title:'AWS'},
+  ];
 
   /* Preview mock contents */
   const PREVIEWS = {
@@ -1083,22 +1172,29 @@
   /* ── Option 5: SC Picker for Tabs ── */
   function showTabSCPicker() {
     closeAll();
-    // Horizontal tabs: bolt.new is the active/visible tab
-    document.getElementById('horiz-tabbar').innerHTML = TABS.map(t =>
-      `<div class="sc-htab${t.id === 'bolt' ? ' active' : ''}">
-        <span style="flex-shrink:0">${t.fav}</span>
-        <span class="sc-htab-label">${t.title}</span>
-        <button class="sc-htab-share" onclick="onShareTab()">Share This Tab</button>
-      </div>`
-    ).join('');
-    // Vertical tabs: meet.google.com is the active/visible tab
-    document.getElementById('vert-tabbar').innerHTML = TABS.map(t =>
-      `<div class="sc-vtab${t.id === 'meet' ? ' active' : ''}">
-        <span style="flex-shrink:0">${t.fav}</span>
-        <span class="sc-vtab-label">${t.title}</span>
+    const htab = (t, active) => `<div class="sc-htab${active?' active':''}">
+      <span style="flex-shrink:0">${t.fav}</span>
+      <span class="sc-htab-label">${t.title}</span>
+      <button class="sc-htab-share" onclick="onShareTab()">Share This Tab</button>
+    </div>`;
+    const vtab = (t, active) => `<div class="sc-vtab${active?' active':''}">
+      <span style="flex-shrink:0">${t.fav}</span>
+      <span class="sc-vtab-label">${t.title}</span>
+      <button class="sc-vtab-share" onclick="onShareTab()">Share This Tab</button>
+    </div>`;
+
+    document.getElementById('horiz-tabbar').innerHTML =
+      TABS.map(t => htab(t, t.id === 'bolt')).join('');
+    document.getElementById('horiz-tabbar-20').innerHTML =
+      TABS_MANY.map((t, i) => htab(t, i === 1)).join('');
+    document.getElementById('vert-tabbar').innerHTML =
+      TABS.map(t => vtab(t, t.id === 'meet')).join('');
+    document.getElementById('vert-tabbar-collapsed').innerHTML =
+      TABS.map(t => `<div class="sc-vtab${t.id==='meet'?' active':''}">
+        <span>${t.fav}</span>
         <button class="sc-vtab-share" onclick="onShareTab()">Share This Tab</button>
-      </div>`
-    ).join('');
+      </div>`).join('');
+
     document.getElementById('sc-tabs-picker').classList.remove('hidden');
   }
 
