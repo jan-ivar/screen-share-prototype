@@ -457,16 +457,17 @@
     font-size: 12px; color: rgba(0,0,0,.2);
   }
 
-  /* ── Option 6 — click tab → "Share This Tab" overlays the page content area ── */
+  /* ── Option 5 — "Share This Tab" button centered in content area ── */
   .sc-page-stub { position: relative; }
   .sc-tab-share-overlay {
-    position: absolute; inset: 0;
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
     display: flex; align-items: center; justify-content: center; gap: 7px;
-    background: rgba(28,28,72,.75); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-    border: none; color: #fff; font-size: 13px; font-weight: 500;
-    cursor: pointer; font-family: inherit; z-index: 10;
+    padding: 8px 18px; border-radius: 8px;
+    background: rgba(44,44,90,.82); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,.18); color: #fff; font-size: 12px; font-weight: 500;
+    cursor: pointer; font-family: inherit; z-index: 10; white-space: nowrap;
   }
-  .sc-tab-share-overlay:hover { background: rgba(26,115,232,.88); transform: scale(1.02); }
+  .sc-tab-share-overlay:hover { background: rgba(26,115,232,.9); border-color: rgba(26,115,232,.6); }
   .sc-tab-share-overlay.hidden { display: none; }
   /* content-mode — hover tab buttons hidden; tabs are clickable to switch */
   #sc-tabs-picker.content-mode .sc-htab:hover .sc-htab-share { display: none; }
@@ -801,9 +802,8 @@
       <div style="opacity:.8;display:flex;align-items:center">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 9h20"/><path d="M7 9V4"/></svg>
       </div>
-      <span class="sc-bar-title" style="margin-left:8px">Share a Tab, Window, or Screen</span>
+      <span class="sc-bar-title" style="margin-left:8px">Choose a Tab to Share</span>
       <button class="sc-btn sc-btn-cancel" onclick="closeAll()">Cancel</button>
-      <button class="sc-btn sc-btn-primary" onclick="onShareScreen('screen')">Share Entire Screen</button>
     </div>
     <div class="sc-stage">
 
@@ -817,10 +817,6 @@
           <div class="sc-horiz-tabbar" id="horiz-tabbar"></div>
           <div class="sc-page-stub" style="background:#0f0f10;color:rgba(255,255,255,.18);flex-direction:column;gap:10px">
             <span>⚡ bolt.new</span>
-            <button class="sc-share-btn" onclick="showSCPicker('window')">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-              Share This Window
-            </button>
             <button class="sc-tab-share-overlay hidden" onclick="onShareTabFromOverlay(this)">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 9h20"/><path d="M7 9V4"/></svg>
               Share This Tab
@@ -838,10 +834,6 @@
         <div class="sc-win-horiz">
           <div class="sc-horiz-tabbar" id="horiz-tabbar-20"></div>
           <div class="sc-page-stub" style="background:#1a1a2e;color:rgba(255,255,255,.18)">
-            <button class="sc-share-btn" onclick="showSCPicker('window')">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-              Share This Window
-            </button>
             <button class="sc-tab-share-overlay hidden" onclick="onShareTabFromOverlay(this)">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 9h20"/><path d="M7 9V4"/></svg>
               Share This Tab
@@ -860,10 +852,6 @@
           <div class="sc-vert-sidebar" id="vert-tabbar"></div>
           <div class="sc-page-stub" style="background:#202124;color:rgba(255,255,255,.18);flex-direction:column;gap:10px">
             <span>📹 meet.google.com</span>
-            <button class="sc-share-btn" onclick="showSCPicker('window')">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-              Share This Window
-            </button>
             <button class="sc-tab-share-overlay hidden" onclick="onShareTabFromOverlay(this)">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 9h20"/><path d="M7 9V4"/></svg>
               Share This Tab
@@ -885,25 +873,6 @@
             <button class="sc-tab-share-overlay hidden" onclick="onShareTabFromOverlay(this)">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 9h20"/><path d="M7 9V4"/></svg>
               Share This Tab
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Terminal -->
-      <div class="sc-win" style="right:2%;top:57%;width:26%;height:30%">
-        <div class="sc-titlebar" style="background:rgba(38,38,40,.96)">
-          <div class="sc-dot r"></div><div class="sc-dot y"></div><div class="sc-dot g"></div>
-          <span class="sc-win-title">agevisser — zsh — 120×50</span>
-        </div>
-        <div class="sc-win-body" style="background:#2a2a2c;align-items:flex-start;justify-content:flex-start;padding:10px 12px">
-          <div style="font-family:'SF Mono',monospace;font-size:10px;color:#a8d880;line-height:1.65;width:100%">
-            <div>agevisser@agevisser ~ % <span style="animation:blink 1s step-end infinite;opacity:.6">█</span></div>
-          </div>
-          <div style="flex:1;display:flex;align-items:flex-end;width:100%;justify-content:center;padding-bottom:8px">
-            <button class="sc-share-btn" onclick="onShareScreen('window','Terminal')">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-              Share This Window
             </button>
           </div>
         </div>
