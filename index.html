@@ -18,7 +18,7 @@
     background: #111;
     border-bottom: 1px solid #2a2a2a;
     padding: 8px 16px;
-    display: flex; align-items: center; gap: 8px;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; row-gap: 6px;
     flex-shrink: 0; z-index: 400;
   }
   #flow-bar label { color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; margin-right: 4px; }
@@ -457,23 +457,24 @@
     font-size: 12px; color: rgba(0,0,0,.2);
   }
 
-  /* ── Option 6 — click-to-select tab, share button appears tight below/beside it ── */
-  #sc-tabs-picker.click-mode .sc-htab { cursor: pointer; }
-  #sc-tabs-picker.click-mode .sc-htab:hover .sc-htab-share { display: none; }
-  #sc-tabs-picker.click-mode .sc-htab--selected { background: #c8d0f0; color: #1a1a6e; border-color: #8090d0; }
-  #sc-tabs-picker.click-mode .sc-htab--selected.active { background: #c8d0f0; }
-  #sc-tabs-picker.click-mode .sc-htab--selected .sc-htab-share {
-    display: block; top: calc(100% + 2px);
+  /* ── Option 5 — "Share This Tab" button centered in content area ── */
+  .sc-page-stub { position: relative; }
+  .sc-tab-share-overlay {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 8px 18px; border-radius: 8px;
+    background: rgba(44,44,90,.82); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,.18); color: #fff; font-size: 12px; font-weight: 500;
+    cursor: pointer; font-family: inherit; z-index: 10; white-space: nowrap;
   }
-  #sc-tabs-picker.click-mode .sc-vtab { cursor: pointer; }
-  #sc-tabs-picker.click-mode .sc-vtab:hover .sc-vtab-share { display: none; }
-  #sc-tabs-picker.click-mode .sc-vtab--selected { background: #dce3f5; color: #1a73e8; }
-  #sc-tabs-picker.click-mode .sc-vtab--selected .sc-vtab-share {
-    display: block; right: 4px;
-  }
-  #sc-tabs-picker.click-mode .sc-vert-sidebar--collapsed .sc-vtab--selected .sc-vtab-share {
-    left: calc(100% + 2px); right: auto; top: 50%; transform: translateY(-50%);
-  }
+  .sc-tab-share-overlay:hover { background: rgba(26,115,232,.9); border-color: rgba(26,115,232,.6); }
+  .sc-tab-share-overlay.hidden { display: none; }
+  .sc-stub-content { position: absolute; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; display: flex; flex-direction: column; }
+  .sc-stub-content > div { width: 100%; height: 100%; }
+  /* content-mode — hover tab buttons hidden; tabs are clickable to switch */
+  #sc-tabs-picker.content-mode .sc-htab:hover .sc-htab-share { display: none; }
+  #sc-tabs-picker.content-mode .sc-vtab:hover .sc-vtab-share { display: none; }
+  .sc-htab--clickable, .sc-vtab--clickable { cursor: pointer; }
 </style>
 </head>
 <body>
@@ -481,13 +482,13 @@
 <!-- ── Flow bar ── -->
 <div id="flow-bar">
   <label>Flow:</label>
-  <button class="flow-btn active" onclick="setFlow(1)">Windows: Chrome-style Picker</button>
-  <button class="flow-btn" onclick="setFlow(2)">Mac: Option 1 — Upfront Tab and Window/Screen fork</button>
-  <button class="flow-btn" onclick="setFlow(3)">Mac: Option 2 — Upfront 3-way fork</button>
-  <button class="flow-btn" onclick="setFlow(4)">Mac: Option 3 — Tab-centric</button>
-  <button class="flow-btn" onclick="setFlow(5)">Mac: Option 4 — Tab Grid</button>
-  <button class="flow-btn" onclick="setFlow(6)">Mac: Option 5 — SC Picker for Tabs</button>
-  <button class="flow-btn" onclick="setFlow(7)">Mac: Option 6 — SC Picker, click to select tab</button>
+  <button class="flow-btn active" onclick="setFlow(1)">Chrome</button>
+  <button class="flow-btn" onclick="setFlow(2)">2-way fork</button>
+  <button class="flow-btn" onclick="setFlow(3)">3-way fork</button>
+  <button class="flow-btn" onclick="setFlow(4)">Tab-centric</button>
+  <button class="flow-btn" onclick="setFlow(5)">Tab grid</button>
+  <button class="flow-btn" onclick="setFlow(6)">SC tabs</button>
+  <a class="flow-btn" href="index2.html" style="text-decoration:none">Navigate-to-share ↗</a>
   <span class="flow-hint">Click the present button ↓ to start</span>
 </div>
 
@@ -665,6 +666,36 @@
   </div>
 
   <!-- ══════════════════════════════════════
+       OPTION 5 — 3-way fork
+  ══════════════════════════════════════ -->
+  <div class="overlay hidden" id="ov-5fork" onclick="if(event.target===this)closeAll()">
+    <div class="choice-dialog" style="width:540px" onclick="event.stopPropagation()">
+      <h2>What would you like to share?</h2>
+      <p class="choice-sub">Choose how you'd like to present in this meeting</p>
+      <div class="choice-cards">
+        <div class="choice-card" onclick="showTabSCPicker('content')">
+          <span class="choice-icon">🗂️</span>
+          <div class="choice-title">A Tab</div>
+          <div class="choice-desc">Share a specific browser tab with audio</div>
+        </div>
+        <div class="choice-card" onclick="showSCPicker('window')">
+          <span class="choice-icon">🪟</span>
+          <div class="choice-title">A Window</div>
+          <div class="choice-desc">Share any open window on your desktop</div>
+        </div>
+        <div class="choice-card" onclick="showSCPicker('screen')">
+          <span class="choice-icon">🖥️</span>
+          <div class="choice-title">Entire Screen</div>
+          <div class="choice-desc">Share everything on your display</div>
+        </div>
+      </div>
+      <div class="choice-footer">
+        <button class="btn-cancel" onclick="closeAll()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
        Shared — Tab-only picker
        (Option 1 tab path)
   ══════════════════════════════════════ -->
@@ -774,9 +805,8 @@
       <div style="opacity:.8;display:flex;align-items:center">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 9h20"/><path d="M7 9V4"/></svg>
       </div>
-      <span class="sc-bar-title" style="margin-left:8px">Share a Tab, Window, or Screen</span>
+      <span class="sc-bar-title" style="margin-left:8px">Choose a Tab to Share</span>
       <button class="sc-btn sc-btn-cancel" onclick="closeAll()">Cancel</button>
-      <button class="sc-btn sc-btn-primary" onclick="onShareScreen('screen')">Share Entire Screen</button>
     </div>
     <div class="sc-stage">
 
@@ -790,9 +820,9 @@
           <div class="sc-horiz-tabbar" id="horiz-tabbar"></div>
           <div class="sc-page-stub" style="background:#0f0f10;color:rgba(255,255,255,.18);flex-direction:column;gap:10px">
             <span>⚡ bolt.new</span>
-            <button class="sc-share-btn" onclick="onShareScreen('window','Firefox')">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-              Share This Window
+            <button class="sc-tab-share-overlay hidden" onclick="onShareTabFromOverlay(this)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 9h20"/><path d="M7 9V4"/></svg>
+              Share This Tab
             </button>
           </div>
         </div>
@@ -807,9 +837,9 @@
         <div class="sc-win-horiz">
           <div class="sc-horiz-tabbar" id="horiz-tabbar-20"></div>
           <div class="sc-page-stub" style="background:#1a1a2e;color:rgba(255,255,255,.18)">
-            <button class="sc-share-btn" onclick="onShareScreen('window','Firefox (20 tabs)')">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-              Share This Window
+            <button class="sc-tab-share-overlay hidden" onclick="onShareTabFromOverlay(this)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 9h20"/><path d="M7 9V4"/></svg>
+              Share This Tab
             </button>
           </div>
         </div>
@@ -825,9 +855,9 @@
           <div class="sc-vert-sidebar" id="vert-tabbar"></div>
           <div class="sc-page-stub" style="background:#202124;color:rgba(255,255,255,.18);flex-direction:column;gap:10px">
             <span>📹 meet.google.com</span>
-            <button class="sc-share-btn" onclick="onShareScreen('window','Firefox (vertical tabs)')">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-              Share This Window
+            <button class="sc-tab-share-overlay hidden" onclick="onShareTabFromOverlay(this)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 9h20"/><path d="M7 9V4"/></svg>
+              Share This Tab
             </button>
           </div>
         </div>
@@ -841,24 +871,11 @@
         </div>
         <div class="sc-vert-body">
           <div class="sc-vert-sidebar sc-vert-sidebar--collapsed" id="vert-tabbar-collapsed"></div>
-          <div class="sc-page-stub" style="background:#202124;color:rgba(255,255,255,.18)">📹</div>
-        </div>
-      </div>
-
-      <!-- Terminal -->
-      <div class="sc-win" style="right:2%;top:57%;width:26%;height:30%">
-        <div class="sc-titlebar" style="background:rgba(38,38,40,.96)">
-          <div class="sc-dot r"></div><div class="sc-dot y"></div><div class="sc-dot g"></div>
-          <span class="sc-win-title">agevisser — zsh — 120×50</span>
-        </div>
-        <div class="sc-win-body" style="background:#2a2a2c;align-items:flex-start;justify-content:flex-start;padding:10px 12px">
-          <div style="font-family:'SF Mono',monospace;font-size:10px;color:#a8d880;line-height:1.65;width:100%">
-            <div>agevisser@agevisser ~ % <span style="animation:blink 1s step-end infinite;opacity:.6">█</span></div>
-          </div>
-          <div style="flex:1;display:flex;align-items:flex-end;width:100%;justify-content:center;padding-bottom:8px">
-            <button class="sc-share-btn" onclick="onShareScreen('window','Terminal')">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-              Share This Window
+          <div class="sc-page-stub" style="background:#202124;color:rgba(255,255,255,.18)">
+            📹
+            <button class="sc-tab-share-overlay hidden" onclick="onShareTabFromOverlay(this)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 9h20"/><path d="M7 9V4"/></svg>
+              Share This Tab
             </button>
           </div>
         </div>
@@ -954,6 +971,34 @@
     {fav:'🟣',title:'Figma'}, {fav:'☁️',title:'AWS'},
   ];
 
+  /* Dummy tab content for Option 5 SC picker */
+  const TAB_STUBS = {
+    meet: `<div style="background:#1e2d3d;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
+      <div style="width:68%;height:48%;background:#162230;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:22px">📹</div>
+      <div style="font-size:8px;color:#6a8fa8">Google Meet — tky-wxzf-oqj</div>
+    </div>`,
+    bolt: `<div style="background:#0d0d10;display:flex;flex-direction:column;padding:8px;gap:3px;box-sizing:border-box;justify-content:center">
+      <div style="height:3px;background:#2a2a40;border-radius:2px;width:78%"></div>
+      <div style="height:3px;background:#2a2a40;border-radius:2px;width:52%"></div>
+      <div style="flex:1;background:#1a1a28;border-radius:3px;margin-top:5px;display:flex;align-items:center;justify-content:center;font-size:18px">⚡</div>
+      <div style="font-size:7px;color:rgba(255,255,255,.2);text-align:center;margin-top:3px">bolt.new</div>
+    </div>`,
+    yt: `<div style="background:#0f0f0f;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px">
+      <div style="width:72%;height:46%;background:#1a1a1a;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:20px">▶</div>
+      <div style="font-size:7px;color:#555;width:72%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center">Vintage Peony Valentine's Art | 4K TV Frame</div>
+    </div>`,
+    google: `<div style="background:#f8f9fa;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
+      <div style="font-size:12px;font-weight:700"><span style="color:#4285f4">G</span><span style="color:#ea4335">o</span><span style="color:#fbbc05">o</span><span style="color:#4285f4">g</span><span style="color:#34a853">l</span><span style="color:#ea4335">e</span></div>
+      <div style="width:62%;height:14px;background:#fff;border-radius:7px;border:1px solid #dfe1e5"></div>
+    </div>`,
+    chat: `<div style="background:#1f2329;display:flex;flex-direction:column;justify-content:flex-end;padding:8px;gap:4px;box-sizing:border-box">
+      <div style="height:10px;background:#2a2f38;border-radius:5px 5px 5px 2px;width:58%"></div>
+      <div style="height:10px;background:#1e3a5f;border-radius:5px 5px 2px 5px;width:44%;align-self:flex-end"></div>
+      <div style="height:10px;background:#2a2f38;border-radius:5px 5px 5px 2px;width:50%"></div>
+      <div style="height:10px;background:#1e3a5f;border-radius:5px 5px 2px 5px;width:36%;align-self:flex-end"></div>
+    </div>`,
+  };
+
   /* Preview mock contents */
   const PREVIEWS = {
     bolt:   `<div style="width:100%;height:100%;background:#0f0f10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#fff;font-size:11px;border-radius:4px"><div style="font-size:15px;font-weight:600;color:#e0e0ff">What will you <em>build</em> today?</div><div style="width:60%;height:26px;background:#1a73e8;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px">Start building</div></div>`,
@@ -997,9 +1042,7 @@
     } else if (currentFlow === 5) {
       openTabGrid();
     } else if (currentFlow === 6) {
-      showTabSCPicker();
-    } else if (currentFlow === 7) {
-      showTabSCPicker(true);
+      document.getElementById('ov-5fork').classList.remove('hidden');
     }
   }
 
@@ -1246,23 +1289,47 @@
   }
 
   /* ── Options 5 & 6: SC Picker for Tabs ── */
-  function selectTabForShare(id, el) {
-    const picker = el.closest('#sc-tabs-picker');
-    picker.querySelectorAll('.sc-htab--selected, .sc-vtab--selected').forEach(t =>
-      t.classList.remove('sc-htab--selected', 'sc-vtab--selected')
-    );
-    el.classList.add(el.classList.contains('sc-htab') ? 'sc-htab--selected' : 'sc-vtab--selected');
+  function renderStubContent(stub, tabId) {
+    stub.querySelectorAll('.sc-stub-content').forEach(el => el.remove());
+    const html = TAB_STUBS[tabId];
+    if (!html) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'sc-stub-content';
+    wrap.innerHTML = html;
+    stub.insertBefore(wrap, stub.querySelector('.sc-tab-share-overlay'));
   }
 
-  function showTabSCPicker(clickMode) {
+  function switchContentTab(id, el) {
+    const bar = el.closest('.sc-horiz-tabbar, .sc-vert-sidebar');
+    bar?.querySelectorAll('.sc-htab, .sc-vtab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    const win = el.closest('.sc-win');
+    const overlay = win?.querySelector('.sc-tab-share-overlay');
+    if (overlay) overlay.dataset.tid = id;
+    const stub = win?.querySelector('.sc-page-stub');
+    if (stub) renderStubContent(stub, id);
+  }
+
+  function onShareTabFromOverlay(btn) {
+    const win = btn.closest('.sc-win');
+    const sel = win?.querySelector('.sc-htab--selected, .sc-vtab--selected');
+    const id = btn.dataset.tid || sel?.dataset?.tid;
+    if (id) onShareTabById(id);
+  }
+
+  function showTabSCPicker(mode) {
     closeAll();
-    const click = clickMode ? `onclick="selectTabForShare(event.currentTarget.dataset.tid, this)"` : '';
-    const htab = (t, active) => `<div class="sc-htab${active?' active':''}" data-tid="${t.id}" ${click}>
+    // reset all overlays to hidden before each open
+    document.querySelectorAll('#sc-tabs-picker .sc-tab-share-overlay').forEach(b => b.classList.add('hidden'));
+
+    const contentMode = mode === 'content';
+
+    const htab = (t, active) => `<div class="sc-htab${active?' active':''}${contentMode?' sc-htab--clickable':''}" data-tid="${t.id}" ${contentMode?`onclick="switchContentTab('${t.id}',this)"`:''}>
       <span style="flex-shrink:0">${t.fav}</span>
       <span class="sc-htab-label">${t.title}</span>
       <button class="sc-htab-share" onclick="event.stopPropagation();onShareTabById('${t.id}')">Share This Tab</button>
     </div>`;
-    const vtab = (t, active) => `<div class="sc-vtab${active?' active':''}" data-tid="${t.id}" ${click}>
+    const vtab = (t, active) => `<div class="sc-vtab${active?' active':''}${contentMode?' sc-vtab--clickable':''}" data-tid="${t.id}" ${contentMode?`onclick="switchContentTab('${t.id}',this)"`:''}>
       <span style="flex-shrink:0">${t.fav}</span>
       <span class="sc-vtab-label">${t.title}</span>
       <button class="sc-vtab-share" onclick="event.stopPropagation();onShareTabById('${t.id}')">Share This Tab</button>
@@ -1275,14 +1342,28 @@
     document.getElementById('vert-tabbar').innerHTML =
       TABS.map(t => vtab(t, t.id === 'meet')).join('');
     document.getElementById('vert-tabbar-collapsed').innerHTML =
-      TABS.map(t => `<div class="sc-vtab${t.id==='meet'?' active':''}" data-tid="${t.id}" ${click}>
+      TABS.map(t => `<div class="sc-vtab${t.id==='meet'?' active':''}${contentMode?' sc-vtab--clickable':''}" data-tid="${t.id}" ${contentMode?`onclick="switchContentTab('${t.id}',this)"`:''}>
         <span>${t.fav}</span>
         <button class="sc-vtab-share" onclick="event.stopPropagation();onShareTabById('${t.id}')">Share This Tab</button>
       </div>`).join('');
 
     const picker = document.getElementById('sc-tabs-picker');
-    picker.classList.toggle('click-mode', !!clickMode);
+    picker.classList.toggle('content-mode', contentMode);
     picker.classList.remove('hidden');
+
+    if (contentMode) {
+      // Wire each window's overlay to its currently-active tab
+      ['horiz-tabbar', 'horiz-tabbar-20', 'vert-tabbar', 'vert-tabbar-collapsed'].forEach(barId => {
+        const bar     = document.getElementById(barId);
+        const active  = bar?.querySelector('.sc-htab.active, .sc-vtab.active');
+        const tid     = active?.dataset?.tid;
+        const win     = bar?.closest('.sc-win');
+        const overlay = win?.querySelector('.sc-tab-share-overlay');
+        if (overlay && tid) { overlay.dataset.tid = tid; overlay.classList.remove('hidden'); }
+        const stub = win?.querySelector('.sc-page-stub');
+        if (stub && tid) renderStubContent(stub, tid);
+      });
+    }
   }
 
   /* ── Init ── */
