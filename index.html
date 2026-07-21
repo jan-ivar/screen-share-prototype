@@ -18,7 +18,7 @@
     background: #111;
     border-bottom: 1px solid #2a2a2a;
     padding: 8px 16px;
-    display: flex; align-items: center; gap: 8px;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; row-gap: 6px;
     flex-shrink: 0; z-index: 400;
   }
   #flow-bar label { color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; margin-right: 4px; }
@@ -482,12 +482,13 @@
 <!-- ── Flow bar ── -->
 <div id="flow-bar">
   <label>Flow:</label>
-  <button class="flow-btn active" onclick="setFlow(1)">Windows</button>
-  <button class="flow-btn" onclick="setFlow(2)">Mac: Option 1 — Upfront Tab and Window/Screen fork</button>
-  <button class="flow-btn" onclick="setFlow(3)">Mac: Option 2 — Upfront 3-way fork</button>
-  <button class="flow-btn" onclick="setFlow(4)">Mac: Option 3 — Tab-centric</button>
-  <button class="flow-btn" onclick="setFlow(5)">Mac: Option 4 — Tab Grid</button>
-  <button class="flow-btn" onclick="setFlow(6)">Mac: Option 5 — Fork + SC Tab content share</button>
+  <button class="flow-btn active" onclick="setFlow(1)">Chrome</button>
+  <button class="flow-btn" onclick="setFlow(2)">2-way fork</button>
+  <button class="flow-btn" onclick="setFlow(3)">3-way fork</button>
+  <button class="flow-btn" onclick="setFlow(4)">Tab-centric</button>
+  <button class="flow-btn" onclick="setFlow(5)">Tab grid</button>
+  <button class="flow-btn" onclick="setFlow(6)">SC tabs</button>
+  <a class="flow-btn" href="index2.html" style="text-decoration:none">Navigate-to-share ↗</a>
   <span class="flow-hint">Click the present button ↓ to start</span>
 </div>
 

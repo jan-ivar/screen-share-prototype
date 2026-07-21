@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Navigate-to-share tab sharing — prototype</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    height: 100vh; overflow: hidden;
+    display: flex; flex-direction: column;
+    background: #111;
+  }
+
+  /* ── Page note bar ── */
+  #note {
+    background: #111; border-bottom: 1px solid #2a2a2a;
+    padding: 7px 16px; display: flex; align-items: center; gap: 10px;
+    flex-shrink: 0; z-index: 500;
+  }
+  #note .title { color: #ddd; font-size: 12px; font-weight: 500; }
+  #note .sub   { color: #666; font-size: 11px; }
+  #note a { color: #4a9eff; font-size: 11px; text-decoration: none; margin-left: auto; }
+  #note a:hover { text-decoration: underline; }
+
+  /* ── macOS desktop ── */
+  #desktop {
+    flex: 1; position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    padding: 26px;
+    background: linear-gradient(160deg,
+      #1c4d80 0%, #3d7ab2 20%, #7fb2d8 36%, #567a5e 52%,
+      #a8b88c 70%, #d4b878 85%, #f2d89a 100%);
+  }
+
+  /* ══════════════════════════════════════
+       Fake Firefox window
+  ══════════════════════════════════════ */
+  #ff {
+    width: min(1000px, 100%); height: 100%;
+    background: #fff; border-radius: 11px; overflow: hidden;
+    box-shadow: 0 24px 70px rgba(0,0,0,.45), 0 3px 10px rgba(0,0,0,.3);
+    display: flex; flex-direction: column; position: relative;
+  }
+
+  /* Tab strip */
+  .ff-tabstrip {
+    background: #f0f0f4; display: flex; align-items: flex-end;
+    padding: 8px 10px 0; gap: 5px; flex-shrink: 0;
+    border-bottom: 1px solid #d7d7db;
+  }
+  .traffic { display: flex; gap: 8px; padding: 0 10px 9px 4px; align-self: center; }
+  .traffic span { width: 12px; height: 12px; border-radius: 50%; }
+  .tl-r { background: #ff5f57; } .tl-y { background: #febc2e; } .tl-g { background: #28c840; }
+
+  .ff-tab {
+    display: flex; align-items: center; gap: 7px;
+    padding: 8px 11px 9px; border-radius: 8px 8px 0 0;
+    background: transparent; color: #55555f; font-size: 12.5px;
+    cursor: pointer; max-width: 210px; white-space: nowrap; overflow: hidden;
+    position: relative; transition: background .12s;
+  }
+  .ff-tab:hover { background: #e4e4ea; }
+  .ff-tab.active { background: #fff; color: #15141a; }
+  .ff-tab .fav { flex-shrink: 0; font-size: 13px; }
+  .ff-tab .lbl { overflow: hidden; text-overflow: ellipsis; }
+  .ff-tab .x {
+    flex-shrink: 0; width: 16px; height: 16px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    color: #77777f; font-size: 14px; opacity: 0;
+  }
+  .ff-tab:hover .x { opacity: 1; }
+  .ff-tab .x:hover { background: #d7d7dd; }
+  .ff-tab .share-dot {
+    width: 9px; height: 9px; border-radius: 50%; background: #e0245e;
+    flex-shrink: 0; box-shadow: 0 0 0 2px rgba(224,36,94,.25);
+    animation: pulse 2s infinite;
+  }
+  .ff-newtab {
+    width: 28px; height: 28px; border-radius: 6px; align-self: center;
+    display: flex; align-items: center; justify-content: center;
+    color: #55555f; font-size: 18px; cursor: pointer; margin-bottom: 4px;
+  }
+  .ff-newtab:hover { background: #e4e4ea; }
+
+  /* Toolbar / URL bar */
+  .ff-toolbar {
+    background: #fff; display: flex; align-items: center; gap: 8px;
+    padding: 7px 12px; flex-shrink: 0; border-bottom: 1px solid #e6e6ea;
+  }
+  .ff-navbtn { color: #5b5b66; font-size: 16px; width: 26px; text-align: center; cursor: default; }
+  .ff-navbtn.dim { color: #c3c3ca; }
+  .ff-urlbar {
+    flex: 1; background: #f0f0f4; border-radius: 8px;
+    padding: 7px 12px; font-size: 12.5px; color: #15141a;
+    display: flex; align-items: center; gap: 8px; min-width: 0;
+  }
+  .ff-urlbar .lock { color: #5b8f5b; font-size: 12px; flex-shrink: 0; }
+  .ff-urlbar .url { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ff-toolicons { display: flex; gap: 12px; color: #5b5b66; font-size: 14px; flex-shrink: 0; }
+
+  /* Sharing status bar (browser chrome) */
+  .ff-status {
+    display: none; background: #fff; border-bottom: 1px solid #e6e6ea;
+    padding: 8px 14px; align-items: center; gap: 8px;
+    font-size: 12.5px; color: #15141a; flex-shrink: 0;
+  }
+  .ff-status.on { display: flex; }
+  .ff-status .sicon {
+    width: 20px; height: 20px; border-radius: 5px; background: #e0245e;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 11px; flex-shrink: 0;
+  }
+  .ff-status .stext { display: flex; align-items: center; gap: 5px; flex: 1; flex-wrap: wrap; }
+  .chip {
+    background: #e6ecff; color: #3358d4; border: none; font-family: inherit;
+    padding: 2px 9px; border-radius: 10px; font-size: 12px; cursor: pointer;
+  }
+  .chip:hover { background: #d4deff; }
+  .stop-btn {
+    background: #3358d4; color: #fff; border: none; font-family: inherit;
+    padding: 5px 14px; border-radius: 6px; font-size: 12px; cursor: pointer;
+    margin-left: auto; flex-shrink: 0;
+  }
+  .stop-btn:hover { background: #2846b8; }
+
+  /* Lower region wraps toolbar + status + page */
+  .ff-lower { flex: 1; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+
+  /* Content area (the page) */
+  .ff-content { flex: 1; position: relative; overflow: hidden; background: #fff; }
+  .page { position: absolute; inset: 0; }
+
+  /* Purple select highlight + tab silhouette while picking.
+     The tint spans the whole lower region (URL bar included) so it reads as
+     one shape connecting to the highlighted tab tip. */
+  #ff.selecting .ff-toolbar { background: #ded3ff; }
+  #ff.selecting .ff-urlbar  { background: #efeaff; }
+  #ff.selecting .ff-tab.active {
+    background: #ded3ff; color: #5b3fd6;
+  }
+  .select-tint {
+    position: absolute; inset: 0; background: rgba(124,92,255,.22);
+    pointer-events: none; display: none; z-index: 5;
+  }
+  #ff.selecting .select-tint { display: block; }
+
+  /* ── Meet page ── */
+  .page-meet { background: #202124; }
+  .meet-header {
+    position: absolute; top: 0; left: 0; right: 0; height: 42px;
+    display: flex; align-items: center; padding: 0 16px; color: #9aa0a6; font-size: 12px; z-index: 2;
+  }
+  .meet-header .sep { margin: 0 8px; color: #5f6368; }
+  .tile-main {
+    position: absolute; top: 46px; bottom: 76px; left: 50%; transform: translateX(-50%);
+    width: min(660px, 86%); background: #303134; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  .avatar {
+    width: 64px; height: 64px; border-radius: 50%; background: #5a6268;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 24px; font-weight: 500; margin: 0 auto 10px;
+  }
+  .tile-cap { color: #9aa0a6; font-size: 13px; font-weight: 500; text-align: center; }
+  .tile-name { position: absolute; bottom: 8px; left: 12px; color: #fff; font-size: 12px; font-weight: 500; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+  .tile-self {
+    position: absolute; bottom: 84px; right: 16px; width: 150px; height: 100px;
+    background: #2a2a2c; border: 2px solid #3c4043; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .tile-self .avatar { width: 40px; height: 40px; font-size: 16px; background: #1e3a5f; margin: 0; }
+  .meet-controls {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 72px;
+    background: rgba(32,33,36,.97); display: flex; align-items: center; justify-content: center; gap: 7px;
+  }
+  .ctrl {
+    width: 46px; height: 46px; border-radius: 50%; border: none; background: #3c4043;
+    color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background .15s;
+  }
+  .ctrl:hover { background: #5f6368; }
+  .ctrl.leave { background: #ea4335; width: 58px; border-radius: 24px; }
+  .ctrl.leave:hover { background: #c5221f; }
+  .ctrl.present.sharing { background: #1e8e3e; }
+  .ctrl.present.sharing:hover { background: #137333; }
+
+  /* Sharing preview shown inside the Meet tile */
+  .share-in-tile { position: absolute; inset: 0; }
+  .share-in-tile .badge {
+    position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,.7); border: 1px solid rgba(255,255,255,.14); border-radius: 20px;
+    padding: 5px 6px 5px 12px; display: flex; align-items: center; gap: 7px;
+    color: #fff; font-size: 12px; white-space: nowrap;
+  }
+  .share-in-tile .dot { width: 8px; height: 8px; border-radius: 50%; background: #34a853; animation: pulse 2s infinite; }
+  .share-in-tile .badge button {
+    background: #ea4335; color: #fff; border: none; border-radius: 13px;
+    padding: 4px 11px; font-size: 11px; cursor: pointer; font-family: inherit;
+  }
+
+  /* ── slides / youtube / example pages ── */
+  .page-slides { background: #f1f3f4; display: flex; padding: 16px; gap: 14px; }
+  .page-slides .film { width: 116px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; overflow: hidden; }
+  .page-slides .film .th {
+    background: #fff; border: 1px solid #dadce0; border-radius: 3px; aspect-ratio: 16/9;
+    display: flex; align-items: center; justify-content: center; font-size: 10px; color: #9aa0a6;
+  }
+  .page-slides .film .th.sel { border: 2px solid #fbbc04; color: #5f6368; }
+  .page-slides .stage { flex: 1; display: flex; align-items: center; justify-content: center; }
+  .page-slides .slide {
+    width: min(560px,94%); aspect-ratio: 16/9; background: #fff; border-radius: 4px;
+    box-shadow: 0 1px 6px rgba(0,0,0,.18);
+    display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;
+    gap: 18px; padding: 32px 40px;
+  }
+  .page-slides .slide h2 { font-size: 28px; color: #202124; font-weight: 700; }
+  .page-slides .slide .body { display: flex; flex-direction: column; gap: 11px; width: 100%; margin-top: 4px; }
+  .page-slides .slide .body .line { height: 11px; background: #e8eaed; border-radius: 6px; }
+
+  .page-yt { background: #0f0f0f; display: flex; justify-content: center; padding: 28px; }
+  .page-yt .col { width: min(640px,92%); display: flex; flex-direction: column; gap: 12px; }
+  .page-yt .player { width: 100%; aspect-ratio: 16/9; background: #000; border: 1px solid #222; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 50px; color: #fff; }
+  .page-yt .cap { color: #f1f1f1; font-size: 17px; font-weight: 600; }
+  .page-yt .meta { color: #aaa; font-size: 13px; }
+
+  .page-example { background: #fff; display: flex; align-items: flex-start; justify-content: flex-start; padding: 60px; }
+  .page-example .card { max-width: 600px; }
+  .page-example h1 { font-size: 30px; color: #1a1a1a; font-weight: 600; }
+  .page-example p { color: #4a4a4a; font-size: 15px; line-height: 1.6; margin: 18px 0; }
+  .page-example a { color: #3872e0; font-size: 15px; text-decoration: none; }
+  .page-example a:hover { text-decoration: underline; }
+
+  /* ── Floating "Share This Tab" prompt (select mode) ── */
+  #share-prompt {
+    display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: #fff; border-radius: 12px; padding: 14px 16px 12px;
+    box-shadow: 0 10px 34px rgba(0,0,0,.32); text-align: center; z-index: 20;
+    animation: popfade .14s ease; min-width: 250px;
+  }
+  #ff.selecting #share-prompt { display: block; }
+  #share-prompt .hint { font-size: 12.5px; color: #444; margin-bottom: 10px; }
+  #share-prompt .share-this {
+    background: #6c47e0; color: #fff; border: none; font-family: inherit;
+    padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
+    cursor: pointer; display: flex; align-items: center; gap: 8px; margin: 0 auto;
+  }
+  #share-prompt .share-this:hover { background: #5b39c9; }
+  #share-prompt .cancel {
+    display: block; margin: 9px auto 0; background: none; border: none;
+    color: #666; font-size: 12px; cursor: pointer; font-family: inherit;
+  }
+  #share-prompt .cancel:hover { color: #222; }
+
+  /* ── Permission doorhanger ── */
+  #perm { display: none; position: absolute; top: 50px; left: 50%; transform: translateX(-50%); z-index: 40; animation: popfade .14s ease; }
+  #perm.on { display: block; }
+  .perm-box {
+    background: #fff; border-radius: 10px; width: 300px; padding: 16px;
+    box-shadow: 0 10px 34px rgba(0,0,0,.34); border: 1px solid #e0e0e6;
+  }
+  .perm-box h3 { font-size: 14px; color: #15141a; font-weight: 600; }
+  .perm-box p { font-size: 12px; color: #5b5b66; margin: 6px 0 14px; line-height: 1.45; }
+  .perm-btn {
+    display: block; width: 100%; text-align: left; border: none; font-family: inherit;
+    padding: 10px 12px; border-radius: 7px; font-size: 13px; cursor: pointer; margin-bottom: 6px;
+    background: #f0f0f4; color: #15141a;
+  }
+  .perm-btn.primary { background: #ece7ff; color: #4a2fc0; font-weight: 500; }
+  .perm-btn.primary:hover { background: #ddd3ff; }
+  .perm-btn:not(.primary):not(.deny):hover { background: #e4e4ea; }
+  .perm-btn.deny { background: transparent; color: #77777f; }
+  .perm-btn.deny:hover { background: #f0f0f4; }
+  .perm-btn small { display: block; color: #8a8a94; font-size: 11px; font-weight: 400; margin-top: 1px; }
+
+  @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:.4 } }
+  @keyframes popfade { from { opacity: 0 } to { opacity: 1 } }
+</style>
+</head>
+<body>
+
+<div id="note">
+  <span class="title">Navigate-to-share tab sharing</span>
+  <span class="sub">Pick a tab by going to it — like macOS's native window picker. Tab-only, single window.</span>
+  <a href="index.html">← other picker options</a>
+</div>
+
+<div id="desktop">
+  <div id="ff">
+
+    <!-- Tab strip -->
+    <div class="ff-tabstrip">
+      <div class="traffic"><span class="tl-r"></span><span class="tl-y"></span><span class="tl-g"></span></div>
+      <div id="tabs" style="display:flex;align-items:flex-end;gap:5px;flex:1;overflow:hidden"></div>
+      <div class="ff-newtab">+</div>
+    </div>
+
+    <!-- Lower region: toolbar + status + page, wrapped so the select highlight can span the URL bar -->
+    <div class="ff-lower">
+
+      <!-- Toolbar -->
+      <div class="ff-toolbar">
+        <span class="ff-navbtn dim">‹</span>
+        <span class="ff-navbtn dim">›</span>
+        <span class="ff-navbtn">⟳</span>
+        <div class="ff-urlbar">
+          <span class="lock">🔒</span>
+          <span class="url" id="urlbar">meet.google.com/tky-wxzf-oqj</span>
+        </div>
+        <div class="ff-toolicons"><span>⤓</span><span>♡</span><span>☰</span></div>
+      </div>
+
+      <!-- Sharing status bar -->
+      <div class="ff-status" id="status">
+        <span class="sicon">◱</span>
+        <span class="stext" id="status-text"></span>
+        <button class="stop-btn" onclick="stopSharing()">Stop sharing</button>
+      </div>
+
+      <!-- Page content -->
+      <div class="ff-content" id="content">
+        <div id="page"></div>
+      </div>
+
+      <!-- Purple select highlight — spans toolbar + page so it connects with the tab tip -->
+      <div class="select-tint"></div>
+
+      <!-- Floating share-mode prompt -->
+      <div id="share-prompt">
+        <div class="hint" id="sp-hint">Go to the tab you wish to share, or</div>
+        <button class="share-this" onclick="shareThisTab()">◱ Share This Tab</button>
+        <button class="cancel" onclick="cancelSelect()">Cancel</button>
+      </div>
+
+      <!-- Permission doorhanger drops from the URL bar -->
+      <div id="perm">
+        <div class="perm-box">
+          <h3>Allow meet.google.com to share your screen?</h3>
+          <p>You can share your entire screen or a window.</p>
+          <button class="perm-btn primary" onclick="allowShareTab()">Allow to Share Tab<small>Go to the tab you want, then share it</small></button>
+          <button class="perm-btn" onclick="notInDemo()">Allow to Share Window</button>
+          <button class="perm-btn" onclick="notInDemo()">Allow to Share Screen</button>
+          <button class="perm-btn deny" onclick="closePerm()">Don't Allow</button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+  /* ── Tab data ── */
+  const TABS = {
+    meet:    { fav:'📹', title:'Google Meet',            host:'meet.google.com', url:'meet.google.com/tky-wxzf-oqj' },
+    slides:  { fav:'📊', title:'Q3 Roadmap – Google Slides', host:'docs.google.com', url:'docs.google.com/presentation/d/1aB2cD3/edit' },
+    yt:      { fav:'▶',  title:'YouTube',                host:'youtube.com',     url:'youtube.com/watch?v=aG4K3nQx' },
+    example: { fav:'🌐', title:'Example Domain',         host:'example.com',     url:'example.com' },
+  };
+  const TAB_ORDER = ['meet', 'slides', 'yt', 'example'];
+
+  /* ── State ──
+     mode: 'idle' | 'perm' | 'selecting' | 'sharing'  */
+  let activeTab = 'meet';
+  let mode      = 'idle';
+  let sharedTab = null;   // set when mode === 'sharing'
+
+  /* ── Page content ── */
+  function pageHTML(id) {
+    if (id === 'meet') {
+      const sharing = mode === 'sharing';
+      const overlay = sharing
+        ? `<div class="share-in-tile">${miniPreview(sharedTab)}
+             <div class="badge"><span class="dot"></span>Sharing ${TABS[sharedTab].host}
+               <button onclick="stopSharing()">Stop</button></div>
+           </div>`
+        : `<div><div class="avatar">J</div><div class="tile-cap">Jamie Chen</div></div>`;
+      return `<div class="page page-meet">
+        <div class="meet-header">10:22 AM<span class="sep">|</span>tky-wxzf-oqj</div>
+        <div class="tile-main">${overlay}<div class="tile-name">Jamie Chen</div></div>
+        <div class="tile-self"><div class="avatar">A</div></div>
+        <div class="meet-controls">
+          <button class="ctrl" title="Mic">🎙</button>
+          <button class="ctrl" title="Camera">🎥</button>
+          <button class="ctrl present ${sharing ? 'sharing' : ''}" title="Present now" onclick="onPresent()">🖥</button>
+          <button class="ctrl" title="Raise hand">✋</button>
+          <button class="ctrl" title="More">⋯</button>
+          <button class="ctrl leave" title="Leave">📞</button>
+        </div>
+      </div>`;
+    }
+    if (id === 'slides') {
+      return `<div class="page page-slides">
+        <div class="film">
+          <div class="th sel">1</div><div class="th">2</div><div class="th">3</div><div class="th">4</div>
+        </div>
+        <div class="stage"><div class="slide">
+          <h2>Q3 Roadmap</h2>
+          <div class="body">
+            <div class="line" style="width:72%"></div>
+            <div class="line" style="width:84%"></div>
+            <div class="line" style="width:58%"></div>
+          </div>
+        </div></div>
+      </div>`;
+    }
+    if (id === 'yt') {
+      return `<div class="page page-yt"><div class="col">
+        <div class="player">▶</div>
+        <div class="cap">Vintage Peony Valentine's Art | 4K TV Frame</div>
+        <div class="meta">1.2M views · 3 weeks ago</div>
+      </div></div>`;
+    }
+    return `<div class="page page-example"><div class="card">
+      <h1>Example Domain</h1>
+      <p>This domain is for use in documentation examples without needing permission. Avoid use in operations.</p>
+      <a href="#">Learn more…</a>
+    </div></div>`;
+  }
+
+  /* Mini render of a shared tab, shown inside the Meet tile */
+  function miniPreview(id) {
+    if (id === 'slides')  return `<div style="width:100%;height:100%;background:#f1f3f4;display:flex;align-items:center;justify-content:center"><div style="width:70%;aspect-ratio:16/9;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.2);border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px"><div style="font-size:20px;font-weight:600;color:#202124">Q3 Roadmap</div><div style="font-size:10px;color:#5f6368">Product · July 2026</div></div></div>`;
+    if (id === 'yt')      return `<div style="width:100%;height:100%;background:#0f0f0f;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:16px"><div style="width:80%;aspect-ratio:16/9;background:#000;border:1px solid #222;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:30px;color:#fff">▶</div><div style="font-size:11px;color:#f1f1f1;font-weight:600">Vintage Peony Valentine's Art</div></div>`;
+    if (id === 'example') return `<div style="width:100%;height:100%;background:#fff;display:flex;flex-direction:column;justify-content:center;padding:22px;gap:8px"><div style="font-size:18px;font-weight:600;color:#1a1a1a">Example Domain</div><div style="font-size:11px;color:#666;line-height:1.5">This domain is for use in documentation examples without needing permission.</div></div>`;
+    return `<div style="width:100%;height:100%;background:#202124;display:flex;align-items:center;justify-content:center;font-size:34px">📹</div>`;
+  }
+
+  /* ── Render ── */
+  function render() {
+    // tab strip
+    document.getElementById('tabs').innerHTML = TAB_ORDER.map(id => {
+      const t = TABS[id];
+      const isShared = mode === 'sharing' && id === sharedTab;
+      return `<div class="ff-tab ${id === activeTab ? 'active' : ''}" onclick="selectTab('${id}')">
+        ${isShared ? '<span class="share-dot"></span>' : `<span class="fav">${t.fav}</span>`}
+        <span class="lbl">${t.title}</span>
+        <span class="x" onclick="event.stopPropagation()">×</span>
+      </div>`;
+    }).join('');
+
+    // url bar + content
+    document.getElementById('urlbar').textContent = TABS[activeTab].url;
+    document.getElementById('page').innerHTML = pageHTML(activeTab);
+
+    // select-mode silhouette
+    document.getElementById('ff').classList.toggle('selecting', mode === 'selecting');
+    // the "go to the tab…" hint only makes sense on the tab you start from (Meet)
+    document.getElementById('sp-hint').style.display = activeTab === 'meet' ? 'block' : 'none';
+
+    // permission doorhanger
+    document.getElementById('perm').classList.toggle('on', mode === 'perm');
+
+    // status bar
+    renderStatus();
+  }
+
+  function renderStatus() {
+    const bar = document.getElementById('status');
+    if (mode !== 'sharing') { bar.classList.remove('on'); return; }
+    bar.classList.add('on');
+    const meetChip   = `<button class="chip" onclick="selectTab('meet')">meet.google.com</button>`;
+    const sharedChip = `<button class="chip" onclick="selectTab('${sharedTab}')">${TABS[sharedTab].host}</button>`;
+    const el = document.getElementById('status-text');
+    if (activeTab === sharedTab) {
+      el.innerHTML = `Sharing this tab to ${meetChip}`;
+    } else if (activeTab === 'meet') {
+      el.innerHTML = `Sharing ${sharedChip} to this tab`;
+    } else {
+      el.innerHTML = `Sharing ${sharedChip} to ${meetChip}`;
+    }
+  }
+
+  /* ── Actions ── */
+  function selectTab(id) {
+    activeTab = id;
+    if (mode === 'perm') mode = 'idle';   // navigating dismisses the prompt
+    render();
+  }
+
+  function onPresent() {
+    if (mode === 'sharing') { stopSharing(); return; }
+    mode = 'perm';
+    render();
+  }
+
+  function closePerm() { mode = 'idle'; render(); }
+  function notInDemo() { /* tab-only demo — window/screen paths live elsewhere */ }
+
+  function allowShareTab() {
+    mode = 'selecting';
+    render();
+  }
+
+  function cancelSelect() { mode = 'idle'; render(); }
+
+  function shareThisTab() {
+    sharedTab = activeTab;
+    mode = 'sharing';
+    render();
+  }
+
+  function stopSharing() {
+    mode = 'idle';
+    sharedTab = null;
+    render();
+  }
+
+  render();
+</script>
+</body>
+</html>
