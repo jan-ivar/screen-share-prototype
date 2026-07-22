@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Navigate-to-share tab sharing — prototype</title>
+<title>Navigate-to-share tab sharing — two windows</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -21,30 +21,29 @@
   }
   #note .title { color: #ddd; font-size: 12px; font-weight: 500; }
   #note .sub   { color: #666; font-size: 11px; }
-  #note a { color: #4a9eff; font-size: 11px; text-decoration: none; }
-  #note a:first-of-type { margin-left: auto; }
-  #note a + a { margin-left: 16px; }
+  #note a { color: #4a9eff; font-size: 11px; text-decoration: none; margin-left: auto; }
   #note a:hover { text-decoration: underline; }
 
   /* ── macOS desktop ── */
   #desktop {
     flex: 1; position: relative; overflow: hidden;
-    display: flex; align-items: center; justify-content: center;
-    padding: 26px;
     background: linear-gradient(160deg,
       #1c4d80 0%, #3d7ab2 20%, #7fb2d8 36%, #567a5e 52%,
       #a8b88c 70%, #d4b878 85%, #f2d89a 100%);
   }
 
   /* ══════════════════════════════════════
-       Fake Firefox window
+       Fake Firefox windows
   ══════════════════════════════════════ */
-  #ff {
-    width: min(1000px, 100%); height: 100%;
+  #ff, #ff2 {
     background: #fff; border-radius: 11px; overflow: hidden;
     box-shadow: 0 24px 70px rgba(0,0,0,.45), 0 3px 10px rgba(0,0,0,.3);
-    display: flex; flex-direction: column; position: relative;
+    display: flex; flex-direction: column; position: absolute;
   }
+  /* Main window — over on the left, clear of the second window */
+  #ff  { top: 26px; bottom: 26px; left: 36px; right: 400px; z-index: 2; }
+  /* Second window — peeks in from the right (no overlap with the main window) */
+  #ff2 { top: 64px; bottom: 70px; right: -110px; width: 470px; z-index: 1; }
 
   /* Tab strip */
   .ff-tabstrip {
@@ -137,8 +136,8 @@
   /* Purple select highlight + tab silhouette while picking.
      The tint spans the whole lower region (URL bar included) so it reads as
      one shape connecting to the highlighted tab tip.
-     Like macOS, the window only lights up while the pointer is over it, so
-     every `.selecting` rule is gated behind `:hover` (matches index3.html). */
+     Like macOS, only the window the pointer is over lights up — so every
+     `.selecting` rule is gated behind `:hover`. */
   #ff.selecting:hover .ff-toolbar { background: #ded3ff; }
   #ff.selecting:hover .ff-urlbar  { background: #efeaff; }
   #ff.selecting:hover .ff-tab.active {
@@ -149,6 +148,29 @@
     pointer-events: none; display: none; z-index: 5;
   }
   #ff.selecting:hover .select-tint { display: block; }
+
+  /* The second window participates in select mode too — the generalization:
+     every window offers "Share This Tab" (like macOS on every window),
+     but only while hovered. */
+  #ff2.selecting:hover .ff-toolbar   { background: #ded3ff; }
+  #ff2.selecting:hover .ff-urlbar    { background: #efeaff; }
+  #ff2.selecting:hover .ff-tab.active { background: #ded3ff; color: #5b3fd6; }
+  #ff2.selecting:hover .select-tint  { display: block; }
+  #win2-share {
+    display: none; position: absolute; top: 46%; left: 38%; transform: translate(-50%,-50%);
+    background: #fff; border-radius: 12px; padding: 14px 16px 12px;
+    box-shadow: 0 10px 34px rgba(0,0,0,.32); text-align: center; z-index: 20;
+  }
+  #ff2.selecting:hover #win2-share { display: block; }
+
+  /* Second window's page stubs */
+  .page-figma { background: #2c2c31; display: flex; align-items: center; justify-content: center; }
+  .page-figma .fig-frame { position: relative; width: 78%; height: 68%; background: #f4f4f6; border-radius: 4px; box-shadow: 0 1px 8px rgba(0,0,0,.3); }
+  .page-figma .fig-rect { position: absolute; border-radius: 3px; }
+  .page-gmail { background: #fff; padding: 12px 8px; display: flex; flex-direction: column; }
+  .page-gmail .gm-row { padding: 9px 10px; font-size: 12px; color: #3c4043; border-bottom: 1px solid #f1f1f1; display: flex; align-items: center; gap: 8px; }
+  .page-gmail .gm-row.unread { font-weight: 700; color: #202124; }
+  .page-gmail .gm-dot { width: 8px; height: 8px; border-radius: 50%; background: #1a73e8; flex-shrink: 0; }
 
   /* ── Meet page ── */
   .page-meet { background: #202124; }
@@ -245,17 +267,18 @@
   }
   #ff.selecting:hover #share-prompt { display: block; }
   #share-prompt .hint { font-size: 12.5px; color: #444; margin-bottom: 10px; }
-  #share-prompt .share-this {
+  /* Shared by both windows' dialogs (#share-prompt and #win2-share) */
+  .share-this {
     background: #6c47e0; color: #fff; border: none; font-family: inherit;
     padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
     cursor: pointer; display: flex; align-items: center; gap: 8px; margin: 0 auto;
   }
-  #share-prompt .share-this:hover { background: #5b39c9; }
-  #share-prompt .cancel {
+  .share-this:hover { background: #5b39c9; }
+  .cancel {
     display: block; margin: 9px auto 0; background: none; border: none;
     color: #666; font-size: 12px; cursor: pointer; font-family: inherit;
   }
-  #share-prompt .cancel:hover { color: #222; }
+  .cancel:hover { color: #222; }
 
   /* ── Permission doorhanger ── */
   #perm { display: none; position: absolute; top: 50px; left: 50%; transform: translateX(-50%); z-index: 40; animation: popfade .14s ease; }
@@ -285,10 +308,9 @@
 <body>
 
 <div id="note">
-  <span class="title">Navigate-to-share tab sharing</span>
-  <span class="sub">Pick a tab by going to it — like macOS's native window picker. Tab-only, single window.</span>
-  <a href="index.html">← other picker options</a>
-  <a href="index3.html">two windows →</a>
+  <span class="title">Navigate-to-share tab sharing — two windows</span>
+  <span class="sub">It generalizes: every Firefox window offers "Share This Tab", like macOS shows "Share This Window" on every window.</span>
+  <a href="index2.html">← single window</a>
 </div>
 
 <div id="desktop">
@@ -352,8 +374,34 @@
 
     </div>
 
-  </div>
-</div>
+  </div><!-- /#ff main -->
+
+  <!-- Second Firefox window — peeks in from the right with two tabs.
+       In tab-share mode it ALSO offers "Share This Tab" (the generalization). -->
+  <div id="ff2">
+    <div class="ff-tabstrip">
+      <div class="traffic"><span class="tl-r"></span><span class="tl-y"></span><span class="tl-g"></span></div>
+      <div id="tabs2" style="display:flex;align-items:flex-end;gap:5px;flex:1;overflow:hidden"></div>
+      <div class="ff-newtab">+</div>
+    </div>
+    <div class="ff-lower">
+      <div class="ff-toolbar">
+        <span class="ff-navbtn dim">‹</span>
+        <span class="ff-navbtn dim">›</span>
+        <span class="ff-navbtn">⟳</span>
+        <div class="ff-urlbar"><span class="lock">🔒</span><span class="url" id="urlbar2"></span></div>
+        <div class="ff-toolicons"><span>☰</span></div>
+      </div>
+      <div class="ff-content" id="content2"><div id="page2"></div></div>
+      <div class="select-tint"></div>
+      <div id="win2-share">
+        <button class="share-this" onclick="shareWin2()">◱ Share This Tab</button>
+        <button class="cancel" onclick="cancelSelect()">Cancel</button>
+      </div>
+    </div>
+  </div><!-- /#ff2 -->
+
+</div><!-- /#desktop -->
 
 <script>
   /* ── Tab data ── */
@@ -362,14 +410,18 @@
     slides:  { fav:'📊', title:'Q3 Roadmap – Google Slides', host:'docs.google.com', url:'docs.google.com/presentation/d/1aB2cD3/edit' },
     yt:      { fav:'▶',  title:'YouTube',                host:'youtube.com',     url:'youtube.com/watch?v=aG4K3nQx' },
     example: { fav:'🌐', title:'Example Domain',         host:'example.com',     url:'example.com' },
+    figma:   { fav:'🎨', title:'Untitled – Figma',       host:'figma.com',       url:'figma.com/file/xY7Qw' },
+    gmail:   { fav:'📧', title:'Inbox (3) – Gmail',       host:'mail.google.com', url:'mail.google.com/mail/u/0' },
   };
-  const TAB_ORDER = ['meet', 'slides', 'yt', 'example'];
+  const TAB_ORDER  = ['meet', 'slides', 'yt', 'example'];  // main window
+  const WIN2_ORDER = ['figma', 'gmail'];                    // second window
 
   /* ── State ──
      mode: 'idle' | 'perm' | 'selecting' | 'sharing'  */
-  let activeTab = 'meet';
-  let mode      = 'idle';
-  let sharedTab = null;   // set when mode === 'sharing'
+  let activeTab  = 'meet';
+  let win2Active = 'figma';   // active tab in the second window
+  let mode       = 'idle';
+  let sharedTab  = null;      // set when mode === 'sharing' (may be a second-window tab)
 
   /* ── Page content ── */
   function pageHTML(id) {
@@ -429,7 +481,25 @@
     if (id === 'slides')  return `<div style="width:100%;height:100%;background:#f1f3f4;display:flex;align-items:center;justify-content:center"><div style="width:70%;aspect-ratio:16/9;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.2);border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px"><div style="font-size:20px;font-weight:600;color:#202124">Q3 Roadmap</div><div style="font-size:10px;color:#5f6368">Product · July 2026</div></div></div>`;
     if (id === 'yt')      return `<div style="width:100%;height:100%;background:#0f0f0f;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:16px"><div style="width:80%;aspect-ratio:16/9;background:#000;border:1px solid #222;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:30px;color:#fff">▶</div><div style="font-size:11px;color:#f1f1f1;font-weight:600">Vintage Peony Valentine's Art</div></div>`;
     if (id === 'example') return `<div style="width:100%;height:100%;background:#fff;display:flex;flex-direction:column;justify-content:center;padding:22px;gap:8px"><div style="font-size:18px;font-weight:600;color:#1a1a1a">Example Domain</div><div style="font-size:11px;color:#666;line-height:1.5">This domain is for use in documentation examples without needing permission.</div></div>`;
+    if (id === 'figma')   return `<div style="width:100%;height:100%;background:#2c2c31;display:flex;align-items:center;justify-content:center"><div style="width:74%;height:64%;background:#f4f4f6;border-radius:4px;position:relative;box-shadow:0 1px 8px rgba(0,0,0,.3)"><div style="position:absolute;left:14%;top:22%;width:38%;height:30%;background:#c9c2ff;border-radius:3px"></div><div style="position:absolute;left:58%;top:26%;width:26%;height:44%;background:#8b7bff;border-radius:3px"></div></div></div>`;
+    if (id === 'gmail')   return `<div style="width:100%;height:100%;background:#fff;display:flex;flex-direction:column;justify-content:center;padding:14px;gap:6px"><div style="font-size:13px;font-weight:700;color:#202124">Inbox</div><div style="font-size:11px;color:#5f6368">3 unread messages</div></div>`;
     return `<div style="width:100%;height:100%;background:#202124;display:flex;align-items:center;justify-content:center;font-size:34px">📹</div>`;
+  }
+
+  /* Second-window page stubs */
+  function page2HTML(id) {
+    if (id === 'gmail') {
+      return `<div class="page page-gmail">
+        <div class="gm-row unread"><span class="gm-dot"></span>Design sync — notes &amp; action items</div>
+        <div class="gm-row">Re: Q3 planning</div>
+        <div class="gm-row">Your invoice #1042</div>
+        <div class="gm-row">Weekly digest</div>
+      </div>`;
+    }
+    return `<div class="page page-figma"><div class="fig-frame">
+      <div class="fig-rect" style="left:14%;top:22%;width:38%;height:30%;background:#c9c2ff"></div>
+      <div class="fig-rect" style="left:58%;top:26%;width:26%;height:44%;background:#8b7bff"></div>
+    </div></div>`;
   }
 
   /* ── Render ── */
@@ -459,16 +529,37 @@
 
     // status bar
     renderStatus();
+
+    // second window
+    renderWin2();
+  }
+
+  function renderWin2() {
+    document.getElementById('tabs2').innerHTML = WIN2_ORDER.map(id => {
+      const t = TABS[id];
+      const isShared = mode === 'sharing' && id === sharedTab;
+      return `<div class="ff-tab ${id === win2Active ? 'active' : ''}" onclick="selectWin2Tab('${id}')">
+        ${isShared ? '<span class="share-dot"></span>' : `<span class="fav">${t.fav}</span>`}
+        <span class="lbl">${t.title}</span>
+        <span class="x" onclick="event.stopPropagation()">×</span>
+      </div>`;
+    }).join('');
+    document.getElementById('urlbar2').textContent = TABS[win2Active].url;
+    document.getElementById('page2').innerHTML = page2HTML(win2Active);
+    document.getElementById('ff2').classList.toggle('selecting', mode === 'selecting');
   }
 
   function renderStatus() {
     const bar = document.getElementById('status');
     if (mode !== 'sharing') { bar.classList.remove('on'); return; }
     bar.classList.add('on');
+    const inWin2 = WIN2_ORDER.includes(sharedTab);   // shared tab lives in the other window
     const meetChip   = `<button class="chip" onclick="selectTab('meet')">meet.google.com</button>`;
-    const sharedChip = `<button class="chip" onclick="selectTab('${sharedTab}')">${TABS[sharedTab].host}</button>`;
+    const sharedChip = inWin2
+      ? `<span class="chip" style="cursor:default">${TABS[sharedTab].host}</span>`
+      : `<button class="chip" onclick="selectTab('${sharedTab}')">${TABS[sharedTab].host}</button>`;
     const el = document.getElementById('status-text');
-    if (activeTab === sharedTab) {
+    if (!inWin2 && activeTab === sharedTab) {
       el.innerHTML = `Sharing this tab to ${meetChip}`;
     } else if (activeTab === 'meet') {
       el.innerHTML = `Sharing ${sharedChip} to this tab`;
@@ -502,6 +593,14 @@
 
   function shareThisTab() {
     sharedTab = activeTab;
+    mode = 'sharing';
+    render();
+  }
+
+  /* Second window: navigate its tabs, and share one from there too */
+  function selectWin2Tab(id) { win2Active = id; renderWin2(); }
+  function shareWin2() {
+    sharedTab = win2Active;
     mode = 'sharing';
     render();
   }
