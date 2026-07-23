@@ -257,12 +257,13 @@
   }
   #share-prompt .cancel:hover { color: #222; }
 
-  /* ── Permission doorhanger ── */
-  #perm { display: none; position: absolute; top: 50px; left: 50%; transform: translateX(-50%); z-index: 40; animation: popfade .14s ease; }
+  /* ── Permission prompt (Safari-style: modal, ghosts the whole window) ── */
+  #perm { display: none; position: absolute; inset: 0; z-index: 50; background: rgba(15,18,28,.34); animation: popfade .14s ease; }
   #perm.on { display: block; }
   .perm-box {
-    background: #fff; border-radius: 10px; width: 300px; padding: 16px;
-    box-shadow: 0 10px 34px rgba(0,0,0,.34); border: 1px solid #e0e0e6;
+    position: absolute; top: 54px; left: 50%; transform: translateX(-50%);
+    background: #fff; border-radius: 10px; width: 320px; padding: 16px;
+    box-shadow: 0 14px 44px rgba(0,0,0,.42); border: 1px solid #e0e0e6;
   }
   .perm-box h3 { font-size: 14px; color: #15141a; font-weight: 600; }
   .perm-box p { font-size: 12px; color: #5b5b66; margin: 6px 0 14px; line-height: 1.45; }
@@ -338,18 +339,19 @@
         <button class="cancel" onclick="cancelSelect()">Cancel</button>
       </div>
 
-      <!-- Permission doorhanger drops from the URL bar -->
-      <div id="perm">
-        <div class="perm-box">
-          <h3>Allow meet.google.com to share your screen?</h3>
-          <p>You can share your entire screen or a window.</p>
-          <button class="perm-btn primary" onclick="allowShareTab()">Allow to Share Tab<small>Go to the tab you want, then share it</small></button>
-          <button class="perm-btn" onclick="notInDemo()">Allow to Share Window</button>
-          <button class="perm-btn" onclick="notInDemo()">Allow to Share Screen</button>
-          <button class="perm-btn deny" onclick="closePerm()">Don't Allow</button>
-        </div>
-      </div>
+    </div><!-- /.ff-lower -->
 
+    <!-- Safari-style permission prompt: window-modal, ghosts the whole window.
+         The backdrop swallows clicks (no dismiss) — only "Don't Allow" / Escape closes it. -->
+    <div id="perm">
+      <div class="perm-box">
+        <h3>Allow meet.google.com to share your screen?</h3>
+        <p>You can share your entire screen or a window.</p>
+        <button class="perm-btn primary" onclick="allowShareTab()">Allow to Share Tab<small>Go to the tab you want, then share it</small></button>
+        <button class="perm-btn" onclick="notInDemo()">Allow to Share Window</button>
+        <button class="perm-btn" onclick="notInDemo()">Allow to Share Screen</button>
+        <button class="perm-btn deny" onclick="closePerm()">Don't Allow</button>
+      </div>
     </div>
 
   </div>
@@ -511,6 +513,13 @@
     sharedTab = null;
     render();
   }
+
+  /* Escape dismisses the permission prompt / tab-select mode */
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && mode !== 'idle' && mode !== 'sharing') {
+      mode = 'idle'; render();
+    }
+  });
 
   render();
 </script>
