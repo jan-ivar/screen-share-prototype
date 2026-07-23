@@ -7,7 +7,7 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Segoe UI Variable', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
     height: 100vh; overflow: hidden;
     display: flex; flex-direction: column;
     background: #111;
@@ -29,36 +29,39 @@
   #note .os-opt:hover { text-decoration: none; color: #ddd; }
   #note .os-opt.active { background: #333; color: #fff; }
 
-  /* ── macOS desktop ── */
+  /* ── Windows 11 desktop (Bloom-style blue wallpaper) ── */
   #desktop {
     flex: 1; position: relative; overflow: hidden;
-    background: linear-gradient(160deg,
-      #1c4d80 0%, #3d7ab2 20%, #7fb2d8 36%, #567a5e 52%,
-      #a8b88c 70%, #d4b878 85%, #f2d89a 100%);
+    background:
+      radial-gradient(60% 55% at 52% 40%, rgba(140,195,255,.55), rgba(140,195,255,0) 62%),
+      radial-gradient(130% 120% at 50% 46%, #2f74c8 0%, #1f4f97 38%, #123663 72%, #0b2547 100%);
   }
 
   /* ══════════════════════════════════════
-       Fake Firefox windows
+       Fake Firefox windows (Windows 11 chrome)
   ══════════════════════════════════════ */
   #ff, #ff2 {
-    background: #fff; border-radius: 11px; overflow: hidden;
-    box-shadow: 0 24px 70px rgba(0,0,0,.45), 0 3px 10px rgba(0,0,0,.3);
+    background: #fff; border-radius: 8px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,.18);
+    box-shadow: 0 24px 70px rgba(0,0,0,.5), 0 3px 10px rgba(0,0,0,.34);
     display: flex; flex-direction: column; position: absolute;
   }
-  /* Main window — over on the left, clear of the second window */
-  #ff  { top: 26px; bottom: 26px; left: 36px; right: 400px; z-index: 2; }
+  /* Main window — over on the left, clear of the second window (and the taskbar) */
+  #ff  { top: 24px; bottom: 64px; left: 36px; right: 400px; z-index: 2; }
   /* Second window — peeks in from the right (no overlap with the main window) */
-  #ff2 { top: 64px; bottom: 70px; right: -110px; width: 470px; z-index: 1; }
+  #ff2 { top: 60px; bottom: 100px; right: -110px; width: 470px; z-index: 1; }
 
-  /* Tab strip */
+  /* Tab strip (right padding reserves space for the caption buttons) */
   .ff-tabstrip {
     background: #f0f0f4; display: flex; align-items: flex-end;
-    padding: 8px 10px 0; gap: 5px; flex-shrink: 0;
+    padding: 8px 140px 0 10px; gap: 5px; flex-shrink: 0;
     border-bottom: 1px solid #d7d7db;
   }
-  .traffic { display: flex; gap: 8px; padding: 0 10px 9px 4px; align-self: center; }
-  .traffic span { width: 12px; height: 12px; border-radius: 50%; }
-  .tl-r { background: #ff5f57; } .tl-y { background: #febc2e; } .tl-g { background: #28c840; }
+  /* Windows 11 caption buttons (top-right of each window) */
+  .win-caption { position: absolute; top: 0; right: 0; display: flex; height: 40px; z-index: 6; }
+  .win-btn { width: 46px; display: flex; align-items: center; justify-content: center; color: #2b2b2b; }
+  .win-btn:hover { background: rgba(0,0,0,.06); }
+  .win-btn.close:hover { background: #c42b1c; color: #fff; }
 
   .ff-tab {
     display: flex; align-items: center; gap: 7px;
@@ -361,6 +364,17 @@
   .perm-btn.deny:hover { background: #f0f0f4; }
   .perm-btn small { display: block; color: #8a8a94; font-size: 11px; font-weight: 400; margin-top: 1px; }
 
+  /* Windows 11 taskbar */
+  #taskbar {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 48px; z-index: 45;
+    background: rgba(38,38,46,.72); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    border-top: 1px solid rgba(255,255,255,.08);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .tb-group { display: flex; align-items: center; gap: 4px; }
+  .tb-btn { width: 40px; height: 40px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: default; color: #eaeaf0; }
+  .tb-btn:hover { background: rgba(255,255,255,.1); }
+
   @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:.4 } }
   @keyframes popfade { from { opacity: 0 } to { opacity: 1 } }
 </style>
@@ -368,12 +382,12 @@
 <body>
 
 <div id="note">
-  <span class="title">Navigate-to-share tab sharing — two windows</span>
-  <span class="sub">It generalizes: every Firefox window offers "Share This Tab", like macOS shows "Share This Window" on every window.</span>
+  <span class="title">Navigate-to-share tab sharing — two windows (Windows 11)</span>
+  <span class="sub">It generalizes: every Firefox window offers "Share This Tab" — one per window.</span>
   <a href="index2.html" class="note-link">← single window</a>
   <span class="os-switch">
-    <a href="index3.html" class="os-opt active">macOS</a>
-    <a href="index4.html" class="os-opt">Windows</a>
+    <a href="index3.html" class="os-opt">macOS</a>
+    <a href="index4.html" class="os-opt active">Windows</a>
   </span>
 </div>
 
@@ -382,9 +396,13 @@
 
     <!-- Tab strip -->
     <div class="ff-tabstrip">
-      <div class="traffic"><span class="tl-r"></span><span class="tl-y"></span><span class="tl-g"></span></div>
-      <div id="tabs" style="display:flex;align-items:flex-end;gap:5px;flex:1;overflow:hidden"></div>
+      <div id="tabs" style="display:flex;align-items:flex-end;gap:5px;overflow:hidden"></div>
       <div class="ff-newtab">+</div>
+      <div class="win-caption">
+        <div class="win-btn"><svg width="11" height="11" viewBox="0 0 11 11" stroke="currentColor" stroke-width="1"><line x1="0" y1="5.5" x2="11" y2="5.5"/></svg></div>
+        <div class="win-btn"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1"><rect x="0.5" y="0.5" width="9" height="9" rx="1"/></svg></div>
+        <div class="win-btn close"><svg width="11" height="11" viewBox="0 0 11 11" stroke="currentColor" stroke-width="1.2"><line x1="0.5" y1="0.5" x2="10.5" y2="10.5"/><line x1="10.5" y1="0.5" x2="0.5" y2="10.5"/></svg></div>
+      </div>
     </div>
 
     <!-- Lower region: toolbar + status + page, wrapped so the select highlight can span the URL bar -->
@@ -430,7 +448,7 @@
           <h3>Allow meet.google.com to share your screen?</h3>
           <p>You can share your entire screen or a window.</p>
           <button class="perm-btn primary" onclick="allowShareTab()">Allow to Share Tab<small>Go to the tab you want, then share it</small></button>
-          <button class="perm-btn primary" onclick="allowShareWindow()">Allow to Share Window<small>Hover a macOS window, then share it</small></button>
+          <button class="perm-btn primary" onclick="allowShareWindow()">Allow to Share Window<small>Hover a window, then share it</small></button>
           <button class="perm-btn primary" onclick="allowShareScreen()">Allow to Share Screen<small>Everything on your display</small></button>
           <button class="perm-btn deny" onclick="closePerm()">Don't Allow</button>
         </div>
@@ -448,9 +466,13 @@
        In tab-share mode it ALSO offers "Share This Tab" (the generalization). -->
   <div id="ff2">
     <div class="ff-tabstrip">
-      <div class="traffic"><span class="tl-r"></span><span class="tl-y"></span><span class="tl-g"></span></div>
-      <div id="tabs2" style="display:flex;align-items:flex-end;gap:5px;flex:1;overflow:hidden"></div>
+      <div id="tabs2" style="display:flex;align-items:flex-end;gap:5px;overflow:hidden"></div>
       <div class="ff-newtab">+</div>
+      <div class="win-caption">
+        <div class="win-btn"><svg width="11" height="11" viewBox="0 0 11 11" stroke="currentColor" stroke-width="1"><line x1="0" y1="5.5" x2="11" y2="5.5"/></svg></div>
+        <div class="win-btn"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1"><rect x="0.5" y="0.5" width="9" height="9" rx="1"/></svg></div>
+        <div class="win-btn close"><svg width="11" height="11" viewBox="0 0 11 11" stroke="currentColor" stroke-width="1.2"><line x1="0.5" y1="0.5" x2="10.5" y2="10.5"/><line x1="10.5" y1="0.5" x2="0.5" y2="10.5"/></svg></div>
+      </div>
     </div>
     <div class="ff-lower">
       <div class="ff-toolbar">
@@ -482,6 +504,18 @@
     </div>
     <button class="mac-cancel" onclick="cancelSelect()">Cancel</button>
     <button class="mac-share-screen" onclick="shareScreen()">Share Entire Screen</button>
+  </div>
+
+  <!-- Windows 11 taskbar -->
+  <div id="taskbar">
+    <div class="tb-group">
+      <div class="tb-btn" title="Start"><svg width="18" height="18" viewBox="0 0 18 18"><rect x="0" y="0" width="8" height="8" rx="1" fill="#4cc2ff"/><rect x="10" y="0" width="8" height="8" rx="1" fill="#4cc2ff"/><rect x="0" y="10" width="8" height="8" rx="1" fill="#4cc2ff"/><rect x="10" y="10" width="8" height="8" rx="1" fill="#4cc2ff"/></svg></div>
+      <div class="tb-btn" title="Search"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#eaeaf0" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+      <div class="tb-btn" title="Task view"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#eaeaf0" stroke-width="2" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="1.5"/><path d="M8 6 V3 h13 v13 h-3"/></svg></div>
+      <div class="tb-btn" title="Firefox" style="font-size:18px">🦊</div>
+      <div class="tb-btn" title="File Explorer" style="font-size:18px">📁</div>
+      <div class="tb-btn" title="Mail" style="font-size:16px">✉️</div>
+    </div>
   </div>
 
 </div><!-- /#desktop -->
@@ -592,11 +626,17 @@
     </div></div>`;
   }
 
-  /* Entire-screen preview: a mini desktop with both windows on it */
+  /* Entire-screen preview: a mini Windows 11 desktop with both windows + taskbar */
   function screenPreview() {
-    return `<div style="width:100%;height:100%;position:relative;overflow:hidden;background:linear-gradient(160deg,#1c4d80,#3d7ab2 28%,#7fb2d8 42%,#567a5e 58%,#d4b878 88%)">
-      <div style="position:absolute;left:6%;top:12%;width:56%;height:72%;border-radius:5px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.4)">${windowPreview(1)}</div>
-      <div style="position:absolute;right:3%;top:22%;width:40%;height:62%;border-radius:5px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.4)">${windowPreview(2)}</div>
+    return `<div style="width:100%;height:100%;position:relative;overflow:hidden;background:radial-gradient(70% 60% at 52% 40%,#3a7bd5,#1f4f97 45%,#10315f 82%)">
+      <div style="position:absolute;left:6%;top:10%;width:56%;height:70%;border-radius:5px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.4)">${windowPreview(1)}</div>
+      <div style="position:absolute;right:3%;top:20%;width:40%;height:60%;border-radius:5px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.4)">${windowPreview(2)}</div>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:9%;background:rgba(38,38,46,.82);display:flex;align-items:center;justify-content:center;gap:6px">
+        <span style="width:8px;height:8px;border-radius:2px;background:#4cc2ff"></span>
+        <span style="width:8px;height:8px;border-radius:50%;background:#cfcfd6"></span>
+        <span style="width:8px;height:8px;border-radius:2px;background:#e88a3c"></span>
+        <span style="width:8px;height:8px;border-radius:2px;background:#f4c430"></span>
+      </div>
     </div>`;
   }
 
@@ -610,8 +650,8 @@
     const tabbar  = tabs.map(id => `<div style="padding:4px 8px;border-radius:5px 5px 0 0;font-size:8px;background:${id===frontId?'#fff':'#cfcfd6'};color:#333;display:flex;align-items:center;gap:3px;max-width:96px;overflow:hidden;white-space:nowrap;flex-shrink:0">${TABS[id].fav}<span style="overflow:hidden;text-overflow:ellipsis">${TABS[id].title}</span></div>`).join('');
     return `<div style="width:100%;height:100%;background:#f0f0f4;display:flex;flex-direction:column;overflow:hidden">
       <div style="display:flex;gap:3px;padding:7px 8px 0;align-items:flex-end">
-        <div style="display:flex;gap:5px;padding:0 8px 6px 2px"><span style="width:8px;height:8px;border-radius:50%;background:#ff5f57"></span><span style="width:8px;height:8px;border-radius:50%;background:#febc2e"></span><span style="width:8px;height:8px;border-radius:50%;background:#28c840"></span></div>
         ${tabbar}
+        <div style="margin-left:auto;display:flex;gap:9px;padding:0 4px 7px;color:#888;font-size:8px;align-items:center;flex-shrink:0"><span>–</span><span>□</span><span>✕</span></div>
       </div>
       <div style="flex:1;position:relative;overflow:hidden">${miniPreview(frontId)}</div>
     </div>`;
